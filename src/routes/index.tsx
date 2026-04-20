@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { auth } from "@/lib/auth-store";
 import { AppShell } from "@/components/AppShell";
 import { ReceptionistDashboard } from "@/components/ReceptionistDashboard";
+import { DoctorWorkspace } from "@/components/DoctorWorkspace";
 import type { Role } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
@@ -23,6 +24,7 @@ function Home() {
 
 function RoleView({ role }: { role: Role }) {
   if (role === "receptionist") return <ReceptionistDashboard />;
+  if (role === "doctor") return <DoctorWorkspace />;
   return <PlaceholderForRole role={role} />;
 }
 
