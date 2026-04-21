@@ -18,6 +18,7 @@ import {
 import { locations, patients, profiles, services } from "@/lib/mock-data";
 import type { Appointment, AppointmentStatus } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
+import { NewAppointmentDialog } from "./NewAppointmentDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -122,11 +123,14 @@ export function ReceptionistDashboard() {
             Live front desk · NexusPulse Medical Center
           </p>
         </div>
-        <div className="grid grid-cols-4 gap-3">
-          <Stat label="Today" value={stats.total} />
-          <Stat label="Upcoming" value={stats.upcoming} tone="primary" />
-          <Stat label="In clinic" value={stats.checked} tone="success" />
-          <Stat label="No-show" value={stats.noShow} tone="destructive" />
+        <div className="flex flex-col gap-3 md:items-end">
+          <NewAppointmentDialog />
+          <div className="grid grid-cols-4 gap-3">
+            <Stat label="Today" value={stats.total} />
+            <Stat label="Upcoming" value={stats.upcoming} tone="primary" />
+            <Stat label="In clinic" value={stats.checked} tone="success" />
+            <Stat label="No-show" value={stats.noShow} tone="destructive" />
+          </div>
         </div>
       </div>
 
