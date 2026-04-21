@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { Activity, Stethoscope, ShieldCheck, ClipboardList, User, Building2 } from "lucide-react";
+import { Activity, Stethoscope, ClipboardList, Building2 } from "lucide-react";
 import { auth } from "@/lib/auth-store";
 import type { Role } from "@/lib/types";
 
@@ -21,8 +21,6 @@ const ROLES: Array<{
   { role: "receptionist", title: "Receptionist",  description: "Live front desk · drag-and-drop calendar", icon: ClipboardList },
   { role: "doctor",       title: "Doctor",        description: "My schedule · patient EHR-light",          icon: Stethoscope },
   { role: "clinic_admin", title: "Clinic Admin",  description: "Staff, services, locations",               icon: Building2 },
-  { role: "patient",      title: "Patient",       description: "Book a visit · my appointments",           icon: User },
-  { role: "super_admin",  title: "Super Admin",   description: "Onboard and manage clinics",               icon: ShieldCheck },
 ];
 
 function LoginPage() {
