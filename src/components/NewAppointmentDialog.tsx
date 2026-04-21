@@ -1,8 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { AlertTriangle, CalendarPlus, Check } from "lucide-react";
-import { appointmentsStore, type RescheduleConflict } from "@/lib/appointments-store";
+import {
+  appointmentsStore,
+  useAppointments,
+  type RescheduleConflict,
+} from "@/lib/appointments-store";
 import { clinic, locations, patients, profiles, services } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
