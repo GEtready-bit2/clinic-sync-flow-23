@@ -219,9 +219,26 @@ export function NewAppointmentDialog() {
               <Select value={time} onValueChange={setTime}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-64">
-                  {TIME_OPTIONS.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  ))}
+                  {TIME_OPTIONS.map((t) => {
+                    const c = slotConflicts[t];
+                    return (
+                      <SelectItem
+                        key={t}
+                        value={t}
+                        disabled={!!c}
+                        className={cn(c && "opacity-50")}
+                      >
+                        <span className="flex w-full items-center justify-between gap-3">
+                          <span>{t}</span>
+                          {c && (
+                            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                              {c === "doctor" ? "doctor busy" : "room busy"}
+                            </span>
+                          )}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </Field>
