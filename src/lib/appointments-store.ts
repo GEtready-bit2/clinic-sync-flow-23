@@ -29,6 +29,56 @@ export const appointmentsStore = {
     emit();
   },
   /**
+   * Book a brand-new appointment with the same conflict rules as reschedule.
+   * Returns null on success or a conflict descriptor on failure.
+   */
+  book(input: {
+    clinic_id: string;
+    patient_id: string;
+    doctor_id: string;
+    service_id: string;
+    location_id: string;
+    starts_at: string;
+    duration_min: number;
+    notes?: string;
+  }): RescheduleConflict | null {
+    const newStart = new Date(input.starts_at).getTime();
+    const newEnd = newStart + input.duration_min * 60_000;
+
+    const conflict = data.find((a) => {
+      if (!ACTIVE(a)) return false;
+      const s = new Date(a.starts_at).getTime();
+      const e = new Date(a.ends_at).getTime();
+      if (!overlaps(newStart, newEnd, s, e)) return false;
+      if (a.doctor_id === input.doctor_id) return true;
+      if (a.location_id === input.location_id) return true;
+      return false;
+    });
+
+    if (conflict) {
+      return {
+        kind: conflict.doctor_id === input.doctor_id ? "doctor" : "room",
+        with: conflict,
+      };
+    }
+
+    const appt: Appointment = {
+      id: `a_${Date.now().toString(36)}`,
+      clinic_id: input.clinic_id,
+      patient_id: input.patient_id,
+      doctor_id: input.doctor_id,
+      service_id: input.service_id,
+      location_id: input.location_id,
+      starts_at: new Date(newStart).toISOString(),
+      ends_at: new Date(newEnd).toISOString(),
+      status: "booked",
+      notes: input.notes,
+    };
+    data = [...data, appt];
+    emit();
+    return null;
+  },
+  /**
    * Try to move an appointment to a new doctor + start time.
    * Mirrors the schema's GIST exclusion: no double-booking of doctor or room.
    * Returns null on success or a conflict descriptor on failure.
