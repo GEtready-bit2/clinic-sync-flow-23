@@ -33,10 +33,14 @@ export const Route = createRootRoute({
       { name: "description", content: "Multi-tenant clinical scheduling SaaS with strict data isolation, multi-location calendars, and a real-time front desk." },
       { name: "author", content: "NexusPulse" },
       { property: "og:title", content: "NexusPulse — Clinical Scheduling Suite" },
-      { property: "og:description", content: "Operate your clinic with calm precision: secure scheduling, EHR-light notes, and live front-desk workflows." },
+      { property: "og:description", content: "Multi-tenant clinical scheduling SaaS with strict data isolation, multi-location calendars, and a real-time front desk." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@NexusPulse" },
+      { name: "twitter:title", content: "NexusPulse — Clinical Scheduling Suite" },
+      { name: "twitter:description", content: "Multi-tenant clinical scheduling SaaS with strict data isolation, multi-location calendars, and a real-time front desk." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b491a69a-4901-4aa5-8c23-a37eef13c05f/id-preview-0fb4be0f--d85c6f43-f5e3-453f-b6f2-de6ab096372c.lovable.app-1776730202015.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b491a69a-4901-4aa5-8c23-a37eef13c05f/id-preview-0fb4be0f--d85c6f43-f5e3-453f-b6f2-de6ab096372c.lovable.app-1776730202015.png" },
     ],
     links: [
       {
