@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth-store";
 import { AppShell } from "@/components/AppShell";
 import { ReceptionistDashboard } from "@/components/ReceptionistDashboard";
 import { DoctorWorkspace } from "@/components/DoctorWorkspace";
+import { ClinicAdminDashboard } from "@/components/ClinicAdminDashboard";
 import type { Role } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
@@ -25,6 +26,7 @@ function Home() {
 function RoleView({ role }: { role: Role }) {
   if (role === "receptionist") return <ReceptionistDashboard />;
   if (role === "doctor") return <DoctorWorkspace />;
+  if (role === "clinic_admin") return <ClinicAdminDashboard />;
   return <PlaceholderForRole role={role} />;
 }
 
