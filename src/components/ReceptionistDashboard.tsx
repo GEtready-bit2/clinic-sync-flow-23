@@ -18,6 +18,7 @@ import {
 import { locations, patients, profiles, services } from "@/lib/mock-data";
 import type { Appointment, AppointmentStatus } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
+import { NewAppointmentDialog } from "./NewAppointmentDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
