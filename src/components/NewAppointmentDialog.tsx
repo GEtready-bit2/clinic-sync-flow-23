@@ -54,6 +54,50 @@ export function NewAppointmentDialog() {
   const [success, setSuccess] = useState(false);
 
   const selectedService = services.find((s) => s.id === serviceId);
+  const allAppts = useAppointments();
+
+  // Compute which time options would conflict with the selected doctor or room on the chosen date.
+  const slotConflicts = useMemo(() => {
+    const map: Record<string, "doctor" | "room" | null> = {};
+    if (!selectedService) {
+      for (const t of TIME_OPTIONS) map[t] = null;
+      return map;
+    }
+    const [yy, mm, dd] = date.split("-").map(Number);
+    const duration = selectedService.duration_min * 60_000;
+    const active = allAppts.filter(
+      (a) => a.status !== "cancelled" && a.status !== "no_show",
+    );
+    for (const t of TIME_OPTIONS) {
+      const [h, mi] = t.split(":").map(Number);
+      const start = new Date(yy, mm - 1, dd, h, mi, 0, 0).getTime();
+      const end = start + duration;
+      let kind: "doctor" | "room" | null = null;
+      for (const a of active) {
+        const s = new Date(a.starts_at).getTime();
+        const e = new Date(a.ends_at).getTime();
+        if (start < e && s < end) {
+          if (a.doctor_id === doctorId) {
+            kind = "doctor";
+            break;
+          }
+          if (a.location_id === locationId) {
+            kind = "room";
+          }
+        }
+      }
+      map[t] = kind;
+    }
+    return map;
+  }, [allAppts, date, doctorId, locationId, selectedService]);
+
+  // If the currently selected time becomes unavailable, auto-advance to the next free slot.
+  useEffect(() => {
+    if (slotConflicts[time]) {
+      const next = TIME_OPTIONS.find((t) => !slotConflicts[t]);
+      if (next) setTime(next);
+    }
+  }, [slotConflicts, time]);
 
   const reset = () => {
     setConflict(null);
