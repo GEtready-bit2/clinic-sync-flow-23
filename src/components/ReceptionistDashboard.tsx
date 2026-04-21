@@ -1,7 +1,20 @@
 import { useMemo, useState } from "react";
 import { format, isSameDay } from "date-fns";
-import { Calendar, Clock, MapPin, Search, UserCheck } from "lucide-react";
-import { useAppointments, appointmentsStore } from "@/lib/appointments-store";
+import {
+  DndContext,
+  PointerSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { AlertTriangle, Calendar, Clock, GripVertical, MapPin, Search, UserCheck } from "lucide-react";
+import {
+  appointmentsStore,
+  useAppointments,
+  type RescheduleConflict,
+} from "@/lib/appointments-store";
 import { locations, patients, profiles, services } from "@/lib/mock-data";
 import type { Appointment, AppointmentStatus } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
@@ -17,6 +30,9 @@ import {
 
 const HOURS = Array.from({ length: 11 }, (_, i) => i + 8); // 8 → 18
 const HOUR_PX = 64;
+const SLOT_MIN = 15; // drop granularity in minutes
+const SLOTS_PER_HOUR = 60 / SLOT_MIN;
+const SLOT_PX = HOUR_PX / SLOTS_PER_HOUR;
 
 const QUICK_TRANSITIONS: AppointmentStatus[] = [
   "confirmed",
@@ -32,6 +48,10 @@ export function ReceptionistDashboard() {
   const [search, setSearch] = useState("");
   const [doctorFilter, setDoctorFilter] = useState<string>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [conflict, setConflict] = useState<{
+    info: RescheduleConflict;
+    at: number;
+  } | null>(null);
 
   const doctors = profiles.filter((p) => p.role === "doctor");
 
@@ -60,6 +80,31 @@ export function ReceptionistDashboard() {
     const noShow = dayAppts.filter((a) => a.status === "no_show").length;
     return { total, checked, upcoming, noShow };
   }, [dayAppts]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+  );
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const apptId = String(e.active.id);
+    const overId = e.over?.id ? String(e.over.id) : null;
+    if (!overId) return;
+    // overId format: "slot::<doctorId>::<HH:MM>"
+    const [, doctorId, time] = overId.split("::");
+    if (!doctorId || !time) return;
+    const [h, m] = time.split(":").map(Number);
+    const startsAt = new Date(today);
+    startsAt.setHours(h, m, 0, 0);
+
+    const result = appointmentsStore.reschedule(apptId, {
+      doctor_id: doctorId,
+      starts_at: startsAt.toISOString(),
+    });
+    if (result) {
+      setConflict({ info: result, at: Date.now() });
+      window.setTimeout(() => setConflict(null), 4000);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-6 px-4 py-6">
@@ -111,102 +156,174 @@ export function ReceptionistDashboard() {
         </Select>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-        {/* Calendar */}
-        <div className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
-          <div className="border-b border-border px-4 py-3">
-            <h2 className="text-sm font-semibold">Day schedule</h2>
-            <p className="text-xs text-muted-foreground">
-              Doctor columns · 8:00 to 18:00
-            </p>
-          </div>
-          <div className="overflow-x-auto">
-            <div className="relative flex min-w-fit">
-              {/* Hour gutter */}
-              <div className="sticky left-0 z-10 flex w-14 flex-col border-r border-border bg-card">
-                <div className="h-10" />
-                {HOURS.map((h) => (
+      {conflict && <ConflictBanner conflict={conflict.info} />}
+
+      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+          {/* Calendar */}
+          <div className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
+            <div className="border-b border-border px-4 py-3">
+              <h2 className="text-sm font-semibold">Day schedule</h2>
+              <p className="text-xs text-muted-foreground">
+                Drag a card to reschedule · 15-minute snap · double-booking blocked
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <div className="relative flex min-w-fit">
+                {/* Hour gutter */}
+                <div className="sticky left-0 z-10 flex w-14 flex-col border-r border-border bg-card">
+                  <div className="h-10" />
+                  {HOURS.map((h) => (
+                    <div
+                      key={h}
+                      style={{ height: HOUR_PX }}
+                      className="px-2 pt-1 text-right text-[11px] font-medium text-muted-foreground"
+                    >
+                      {h}:00
+                    </div>
+                  ))}
+                </div>
+                {/* Doctor columns */}
+                {visibleDoctors.map((doc) => (
                   <div
-                    key={h}
-                    style={{ height: HOUR_PX }}
-                    className="px-2 pt-1 text-right text-[11px] font-medium text-muted-foreground"
+                    key={doc.id}
+                    className="flex min-w-[220px] flex-1 flex-col border-r border-border last:border-r-0"
                   >
-                    {h}:00
+                    <div className="flex h-10 items-center gap-2 border-b border-border bg-muted/40 px-3">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-soft text-[10px] font-semibold text-primary">
+                        {doc.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                      </div>
+                      <div className="leading-tight">
+                        <div className="text-xs font-semibold">{doc.full_name}</div>
+                        <div className="text-[10px] text-muted-foreground">{doc.specialty}</div>
+                      </div>
+                    </div>
+                    <DoctorColumn doctorId={doc.id}>
+                      {dayAppts
+                        .filter((a) => a.doctor_id === doc.id)
+                        .map((a) => (
+                          <ApptBlock
+                            key={a.id}
+                            appt={a}
+                            selected={selectedId === a.id}
+                            onSelect={() => setSelectedId(a.id)}
+                          />
+                        ))}
+                    </DoctorColumn>
                   </div>
                 ))}
               </div>
-              {/* Doctor columns */}
-              {visibleDoctors.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="flex min-w-[200px] flex-1 flex-col border-r border-border last:border-r-0"
-                >
-                  <div className="flex h-10 items-center gap-2 border-b border-border bg-muted/40 px-3">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-soft text-[10px] font-semibold text-primary">
-                      {doc.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
-                    </div>
-                    <div className="leading-tight">
-                      <div className="text-xs font-semibold">{doc.full_name}</div>
-                      <div className="text-[10px] text-muted-foreground">{doc.specialty}</div>
-                    </div>
-                  </div>
-                  <div
-                    className="relative"
-                    style={{ height: HOURS.length * HOUR_PX }}
-                  >
-                    {HOURS.map((_, idx) => (
-                      <div
-                        key={idx}
-                        style={{ top: idx * HOUR_PX, height: HOUR_PX }}
-                        className="absolute inset-x-0 border-b border-border/60"
-                      />
-                    ))}
-                    {dayAppts
-                      .filter((a) => a.doctor_id === doc.id)
-                      .map((a) => (
-                        <ApptBlock
-                          key={a.id}
-                          appt={a}
-                          selected={selectedId === a.id}
-                          onSelect={() => setSelectedId(a.id)}
-                        />
-                      ))}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
-        </div>
 
-        {/* Live Front Desk */}
-        <div className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
-          <div className="border-b border-border px-4 py-3">
-            <h2 className="flex items-center gap-2 text-sm font-semibold">
-              <UserCheck className="h-4 w-4 text-primary" />
-              Live front desk
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Tap a status to advance the visit
-            </p>
+          {/* Live Front Desk */}
+          <div className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
+            <div className="border-b border-border px-4 py-3">
+              <h2 className="flex items-center gap-2 text-sm font-semibold">
+                <UserCheck className="h-4 w-4 text-primary" />
+                Live front desk
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Tap a status to advance the visit
+              </p>
+            </div>
+            <ul className="max-h-[560px] divide-y divide-border overflow-y-auto">
+              {dayAppts.length === 0 && (
+                <li className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  No appointments match your filters.
+                </li>
+              )}
+              {dayAppts.map((a) => (
+                <FrontDeskRow
+                  key={a.id}
+                  appt={a}
+                  active={selectedId === a.id}
+                  onSelect={() => setSelectedId(a.id)}
+                />
+              ))}
+            </ul>
           </div>
-          <ul className="max-h-[560px] divide-y divide-border overflow-y-auto">
-            {dayAppts.length === 0 && (
-              <li className="px-4 py-10 text-center text-sm text-muted-foreground">
-                No appointments match your filters.
-              </li>
-            )}
-            {dayAppts.map((a) => (
-              <FrontDeskRow
-                key={a.id}
-                appt={a}
-                active={selectedId === a.id}
-                onSelect={() => setSelectedId(a.id)}
-              />
-            ))}
-          </ul>
+        </div>
+      </DndContext>
+    </div>
+  );
+}
+
+function ConflictBanner({ conflict }: { conflict: RescheduleConflict }) {
+  const other = conflict.with;
+  const patient = patients.find((p) => p.id === other.patient_id);
+  const doctor = profiles.find((p) => p.id === other.doctor_id);
+  const room = locations.find((l) => l.id === other.location_id);
+  return (
+    <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+      <div>
+        <div className="font-semibold">
+          Reschedule blocked — {conflict.kind === "doctor" ? "doctor" : "room"}{" "}
+          double-booking
+        </div>
+        <div className="text-xs opacity-90">
+          Conflicts with {patient?.full_name} at {format(new Date(other.starts_at), "HH:mm")}{" "}
+          ({conflict.kind === "doctor" ? doctor?.full_name : room?.name}).
         </div>
       </div>
     </div>
+  );
+}
+
+function DoctorColumn({
+  doctorId,
+  children,
+}: {
+  doctorId: string;
+  children: React.ReactNode;
+}) {
+  // Build SLOTS_PER_HOUR * HOURS.length droppable slots so dnd-kit can snap to 15-min increments.
+  const slots = HOURS.flatMap((h) =>
+    Array.from({ length: SLOTS_PER_HOUR }, (_, s) => ({
+      h,
+      m: s * SLOT_MIN,
+    })),
+  );
+  return (
+    <div
+      className="relative"
+      style={{ height: HOURS.length * HOUR_PX }}
+    >
+      {HOURS.map((_, idx) => (
+        <div
+          key={idx}
+          style={{ top: idx * HOUR_PX, height: HOUR_PX }}
+          className="absolute inset-x-0 border-b border-border/60"
+        />
+      ))}
+      {slots.map(({ h, m }) => (
+        <DropSlot key={`${h}:${m}`} doctorId={doctorId} hour={h} minute={m} />
+      ))}
+      {children}
+    </div>
+  );
+}
+
+function DropSlot({
+  doctorId,
+  hour,
+  minute,
+}: {
+  doctorId: string;
+  hour: number;
+  minute: number;
+}) {
+  const time = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  const id = `slot::${doctorId}::${time}`;
+  const top = (hour - 8) * HOUR_PX + (minute / 60) * HOUR_PX;
+  const { isOver, setNodeRef } = useDroppable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ top, height: SLOT_PX }}
+      className={`absolute inset-x-0 transition-colors ${isOver ? "bg-primary/15 ring-1 ring-inset ring-primary/40" : ""}`}
+    />
   );
 }
 
@@ -259,26 +376,45 @@ function ApptBlock({
       ? "opacity-60"
       : "";
 
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({ id: appt.id });
+
+  const dragStyle: React.CSSProperties = {
+    top,
+    height,
+    borderLeftColor: service?.color,
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
+    zIndex: isDragging ? 30 : 1,
+    opacity: isDragging ? 0.85 : 1,
+    cursor: isDragging ? "grabbing" : "grab",
+  };
+
   return (
-    <button
+    <div
+      ref={setNodeRef}
+      style={dragStyle}
       onClick={onSelect}
-      style={{
-        top,
-        height,
-        borderLeftColor: service?.color,
-      }}
-      className={`absolute inset-x-1 overflow-hidden rounded-md border border-border border-l-4 bg-card px-2 py-1 text-left text-xs shadow-[var(--shadow-card)] transition hover:shadow-[var(--shadow-elevated)] ${dim} ${selected ? "ring-2 ring-primary" : ""}`}
+      {...listeners}
+      {...attributes}
+      className={`absolute inset-x-1 flex flex-col overflow-hidden rounded-md border border-border border-l-4 bg-card px-2 py-1 text-left text-xs shadow-[var(--shadow-card)] transition hover:shadow-[var(--shadow-elevated)] ${dim} ${selected ? "ring-2 ring-primary" : ""} ${isDragging ? "shadow-[var(--shadow-elevated)]" : ""}`}
     >
-      <div className="truncate font-semibold text-foreground">
-        {patient?.full_name}
+      <div className="flex items-start gap-1">
+        <GripVertical className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground/60" />
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-semibold text-foreground">
+            {patient?.full_name}
+          </div>
+          <div className="truncate text-[10px] text-muted-foreground">
+            {format(start, "HH:mm")} · {service?.name}
+          </div>
+          <div className="truncate text-[10px] text-muted-foreground">
+            {location?.name}
+          </div>
+        </div>
       </div>
-      <div className="truncate text-[10px] text-muted-foreground">
-        {format(start, "HH:mm")} · {service?.name}
-      </div>
-      <div className="truncate text-[10px] text-muted-foreground">
-        {location?.name}
-      </div>
-    </button>
+    </div>
   );
 }
 

@@ -7,6 +7,17 @@ let data: Appointment[] = [...seed];
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
+const ACTIVE = (a: Appointment) =>
+  a.status !== "cancelled" && a.status !== "no_show";
+
+function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number) {
+  return aStart < bEnd && bStart < aEnd;
+}
+
+export type RescheduleConflict =
+  | { kind: "doctor"; with: Appointment }
+  | { kind: "room"; with: Appointment };
+
 export const appointmentsStore = {
   all: () => data,
   setStatus(id: string, status: AppointmentStatus) {
@@ -16,6 +27,53 @@ export const appointmentsStore = {
   add(appt: Appointment) {
     data = [...data, appt];
     emit();
+  },
+  /**
+   * Try to move an appointment to a new doctor + start time.
+   * Mirrors the schema's GIST exclusion: no double-booking of doctor or room.
+   * Returns null on success or a conflict descriptor on failure.
+   */
+  reschedule(
+    id: string,
+    next: { doctor_id: string; starts_at: string },
+  ): RescheduleConflict | null {
+    const target = data.find((a) => a.id === id);
+    if (!target) return null;
+    const duration =
+      new Date(target.ends_at).getTime() - new Date(target.starts_at).getTime();
+    const newStart = new Date(next.starts_at).getTime();
+    const newEnd = newStart + duration;
+
+    const conflict = data.find((a) => {
+      if (a.id === id || !ACTIVE(a)) return false;
+      const s = new Date(a.starts_at).getTime();
+      const e = new Date(a.ends_at).getTime();
+      if (!overlaps(newStart, newEnd, s, e)) return false;
+      if (a.doctor_id === next.doctor_id) return true;
+      if (a.location_id === target.location_id) return true;
+      return false;
+    });
+
+    if (conflict) {
+      return {
+        kind:
+          conflict.doctor_id === next.doctor_id ? "doctor" : "room",
+        with: conflict,
+      };
+    }
+
+    data = data.map((a) =>
+      a.id === id
+        ? {
+            ...a,
+            doctor_id: next.doctor_id,
+            starts_at: new Date(newStart).toISOString(),
+            ends_at: new Date(newEnd).toISOString(),
+          }
+        : a,
+    );
+    emit();
+    return null;
   },
   subscribe(l: () => void) {
     listeners.add(l);
