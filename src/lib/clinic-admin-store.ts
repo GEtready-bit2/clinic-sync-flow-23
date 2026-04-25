@@ -35,29 +35,12 @@ const listeners = new Set<() => void>();
 
 let staff: StaffMember[] = seedProfiles
   .filter((p) => p.clinic_id === clinic.id && p.role !== "patient")
-  .map((p) => ({ ...p, active: true, invited_at: "2025-01-15" }));
+  .map((p) => ({ ...p, active: true, invited_at: new Date().toISOString().slice(0, 10) }));
 
 let services: Service[] = [...seedServices];
 let locations: Location[] = [...seedLocations];
 let availability: DoctorAvailability[] = [...seedAvailability];
-let timeOff: TimeOff[] = [
-  {
-    id: "to_1",
-    clinic_id: clinic.id,
-    doctor_id: "u_doc1",
-    starts_on: nextMonday(7),
-    ends_on: nextMonday(11),
-    reason: "Annual conference",
-  },
-];
-
-function nextMonday(offset = 0): string {
-  const d = new Date();
-  const day = d.getDay();
-  const diff = (8 - day) % 7 || 7;
-  d.setDate(d.getDate() + diff + offset);
-  return d.toISOString().slice(0, 10);
-}
+let timeOff: TimeOff[] = [];
 
 function emit() {
   listeners.forEach((l) => l());
@@ -172,11 +155,11 @@ export const useAvailability = () => useStore(clinicAdmin.listAvailability);
 export const useTimeOff = () => useStore(clinicAdmin.listTimeOff);
 
 export const WEEKDAYS: { key: Weekday; label: string }[] = [
-  { key: "mon", label: "Mon" },
-  { key: "tue", label: "Tue" },
-  { key: "wed", label: "Wed" },
-  { key: "thu", label: "Thu" },
-  { key: "fri", label: "Fri" },
-  { key: "sat", label: "Sat" },
-  { key: "sun", label: "Sun" },
+  { key: "mon", label: "Seg" },
+  { key: "tue", label: "Ter" },
+  { key: "wed", label: "Qua" },
+  { key: "thu", label: "Qui" },
+  { key: "fri", label: "Sex" },
+  { key: "sat", label: "Sáb" },
+  { key: "sun", label: "Dom" },
 ];
