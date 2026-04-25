@@ -721,7 +721,7 @@ function AvailabilityForm({
 
   return (
     <div className="grid gap-2 rounded-md border border-border bg-card p-3 sm:grid-cols-5">
-      <Field label="Day">
+      <Field label="Dia">
         <Select value={weekday} onValueChange={(v) => setWeekday(v as Weekday)}>
           <SelectTrigger>
             <SelectValue />
@@ -735,10 +735,10 @@ function AvailabilityForm({
           </SelectContent>
         </Select>
       </Field>
-      <Field label="Room">
+      <Field label="Sala">
         <Select value={locationId} onValueChange={setLocationId}>
           <SelectTrigger>
-            <SelectValue placeholder="Room" />
+            <SelectValue placeholder="Sala" />
           </SelectTrigger>
           <SelectContent>
             {locations.map((l) => (
@@ -749,15 +749,15 @@ function AvailabilityForm({
           </SelectContent>
         </Select>
       </Field>
-      <Field label="Start">
+      <Field label="Início">
         <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
       </Field>
-      <Field label="End">
+      <Field label="Fim">
         <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
       </Field>
       <div className="flex items-end">
         <Button onClick={submit} className="w-full gap-2">
-          <Plus className="h-4 w-4" /> Add block
+          <Plus className="h-4 w-4" /> Adicionar bloco
         </Button>
       </div>
     </div>
@@ -783,22 +783,22 @@ function TimeOffForm({ doctorId }: { doctorId: string }) {
 
   return (
     <div className="grid gap-2 rounded-md border border-border bg-card p-3 sm:grid-cols-4">
-      <Field label="From">
+      <Field label="De">
         <Input type="date" value={starts} onChange={(e) => setStarts(e.target.value)} />
       </Field>
-      <Field label="To">
+      <Field label="Até">
         <Input type="date" value={ends} onChange={(e) => setEnds(e.target.value)} />
       </Field>
-      <Field label="Reason (optional)">
+      <Field label="Motivo (opcional)">
         <Input
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Vacation, conference…"
+          placeholder="Férias, congresso…"
         />
       </Field>
       <div className="flex items-end">
         <Button onClick={submit} className="w-full gap-2">
-          <CalendarOff className="h-4 w-4" /> Block dates
+          <CalendarOff className="h-4 w-4" /> Bloquear datas
         </Button>
       </div>
     </div>
