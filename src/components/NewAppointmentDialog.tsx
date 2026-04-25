@@ -305,10 +305,10 @@ function ConflictNotice({ conflict }: { conflict: RescheduleConflict }) {
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
       <div>
         <div className="font-semibold">
-          {conflict.kind === "doctor" ? "Doctor" : "Room"} double-booking blocked
+          Sobreposição de {conflict.kind === "doctor" ? "médico" : "sala"} bloqueada
         </div>
         <div className="text-xs opacity-90">
-          Conflicts with {patient?.full_name} at{" "}
+          Conflito com {patient?.full_name} às{" "}
           {format(new Date(other.starts_at), "HH:mm")} (
           {conflict.kind === "doctor" ? doctor?.full_name : room?.name}).
         </div>
