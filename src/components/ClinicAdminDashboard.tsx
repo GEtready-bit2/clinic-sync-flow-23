@@ -468,18 +468,18 @@ function LocationsPanel() {
 
   return (
     <PanelCard
-      title="Rooms & locations"
-      description="Physical rooms used for scheduling. The engine prevents double-booking a room."
+      title="Salas e locais"
+      description="Salas físicas usadas no agendamento. O sistema impede a sobreposição de uma mesma sala."
     >
       <div className="mb-4 flex flex-col gap-2 sm:flex-row">
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder={editingId ? "Update room name" : "e.g. Consult Room 4"}
+          placeholder={editingId ? "Atualizar nome da sala" : "ex.: Consultório 4"}
           onKeyDown={(e) => e.key === "Enter" && submit()}
         />
         <Button onClick={submit} className="gap-2">
-          {editingId ? "Save" : <><Plus className="h-4 w-4" /> Add room</>}
+          {editingId ? "Salvar" : <><Plus className="h-4 w-4" /> Adicionar sala</>}
         </Button>
         {editingId && (
           <Button
@@ -489,7 +489,7 @@ function LocationsPanel() {
               setName("");
             }}
           >
-            Cancel
+            Cancelar
           </Button>
         )}
       </div>
@@ -512,7 +512,7 @@ function LocationsPanel() {
                   setName(l.name);
                 }}
               >
-                Edit
+                Editar
               </Button>
               <Button
                 size="icon"
@@ -524,7 +524,7 @@ function LocationsPanel() {
             </div>
           </div>
         ))}
-        {locations.length === 0 && <EmptyState message="No rooms configured yet." />}
+        {locations.length === 0 && <EmptyState message="Nenhuma sala cadastrada ainda." />}
       </div>
     </PanelCard>
   );
