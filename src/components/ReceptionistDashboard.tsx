@@ -16,10 +16,12 @@ import {
   useAppointments,
   type RescheduleConflict,
 } from "@/lib/appointments-store";
-import { locations, patients, profiles, services } from "@/lib/mock-data";
+import { usePatients } from "@/lib/patients-store";
+import { locations, profiles, services } from "@/lib/mock-data";
 import type { Appointment, AppointmentStatus } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
 import { NewAppointmentDialog } from "./NewAppointmentDialog";
+import { NewPatientDialog } from "./NewPatientDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -57,6 +59,7 @@ export function ReceptionistDashboard() {
   } | null>(null);
 
   const doctors = profiles.filter((p) => p.role === "doctor");
+  const patients = usePatients();
 
   const dayAppts = useMemo(() => {
     return all
@@ -71,7 +74,7 @@ export function ReceptionistDashboard() {
         (a, b) =>
           new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
       );
-  }, [all, doctorFilter, search, today]);
+  }, [all, doctorFilter, search, today, patients]);
 
   const visibleDoctors =
     doctorFilter === "all" ? doctors : doctors.filter((d) => d.id === doctorFilter);
@@ -125,7 +128,10 @@ export function ReceptionistDashboard() {
           </p>
         </div>
         <div className="flex flex-col gap-3 md:items-end">
-          <NewAppointmentDialog />
+          <div className="flex gap-2">
+            <NewPatientDialog />
+            <NewAppointmentDialog />
+          </div>
           <div className="grid grid-cols-4 gap-3">
             <Stat label="Hoje" value={stats.total} />
             <Stat label="Próximos" value={stats.upcoming} tone="primary" />
@@ -250,6 +256,7 @@ export function ReceptionistDashboard() {
                   appt={a}
                   active={selectedId === a.id}
                   onSelect={() => setSelectedId(a.id)}
+                  patients={patients}
                 />
               ))}
             </ul>
@@ -261,6 +268,7 @@ export function ReceptionistDashboard() {
 }
 
 function ConflictBanner({ conflict }: { conflict: RescheduleConflict }) {
+  const patients = usePatients();
   const other = conflict.with;
   const patient = patients.find((p) => p.id === other.patient_id);
   const doctor = profiles.find((p) => p.id === other.doctor_id);
@@ -371,6 +379,7 @@ function ApptBlock({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const patients = usePatients();
   const start = new Date(appt.starts_at);
   const end = new Date(appt.ends_at);
   const startMinutes = (start.getHours() - 8) * 60 + start.getMinutes();
@@ -436,10 +445,12 @@ function FrontDeskRow({
   appt,
   active,
   onSelect,
+  patients,
 }: {
   appt: Appointment;
   active: boolean;
   onSelect: () => void;
+  patients: ReturnType<typeof usePatients>;
 }) {
   const patient = patients.find((p) => p.id === appt.patient_id);
   const service = services.find((s) => s.id === appt.service_id);

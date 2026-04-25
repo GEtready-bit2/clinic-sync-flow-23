@@ -458,41 +458,64 @@ function LocationsPanel() {
   const locations = useLocations();
   const [name, setName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+
+  const reset = () => {
+    setEditingId(null);
+    setName("");
+  };
 
   const submit = () => {
     if (!name.trim()) return;
     clinicAdmin.upsertLocation({ id: editingId ?? undefined, name: name.trim() });
-    setName("");
-    setEditingId(null);
+    reset();
+    setOpen(false);
   };
 
   return (
     <PanelCard
       title="Salas e locais"
       description="Salas físicas usadas no agendamento. O sistema impede a sobreposição de uma mesma sala."
+      action={
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) reset();
+          }}
+        >
+          <DialogTrigger asChild>
+            <Button size="sm" className="gap-2">
+              <Plus className="h-4 w-4" /> Nova sala
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingId ? "Editar sala" : "Nova sala"}</DialogTitle>
+              <DialogDescription>
+                Cadastre o nome da sala usada para agendamentos.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-2">
+              <Field label="Nome da sala">
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="ex.: Consultório 4"
+                  onKeyDown={(e) => e.key === "Enter" && submit()}
+                />
+              </Field>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={submit}>{editingId ? "Salvar alterações" : "Criar sala"}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      }
     >
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row">
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={editingId ? "Atualizar nome da sala" : "ex.: Consultório 4"}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-        />
-        <Button onClick={submit} className="gap-2">
-          {editingId ? "Salvar" : <><Plus className="h-4 w-4" /> Adicionar sala</>}
-        </Button>
-        {editingId && (
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setEditingId(null);
-              setName("");
-            }}
-          >
-            Cancelar
-          </Button>
-        )}
-      </div>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {locations.map((l) => (
           <div
@@ -510,6 +533,7 @@ function LocationsPanel() {
                 onClick={() => {
                   setEditingId(l.id);
                   setName(l.name);
+                  setOpen(true);
                 }}
               >
                 Editar
@@ -585,7 +609,20 @@ function AvailabilityPanel({
         ) : (
           <>
             <WeeklyGrid availability={docAvailability} />
-            <AvailabilityForm doctorId={doctorId} locations={locations} />
+            
+            <div className="mb-4 mt-6 flex items-center justify-between">
+              <h4 className="text-sm font-medium">Horários ativos</h4>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-2">
+                    <Plus className="h-4 w-4" /> Adicionar horário
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <AvailabilityForm doctorId={doctorId} locations={locations} />
+                </DialogContent>
+              </Dialog>
+            </div>
             {docAvailability.length > 0 && (
               <div className="mt-4">
                 <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -618,6 +655,9 @@ function AvailabilityPanel({
                 </div>
               </div>
             )}
+            {docAvailability.length === 0 && (
+              <EmptyState message="Nenhum horário de atendimento cadastrado." />
+            )}
           </>
         )}
       </PanelCard>
@@ -626,8 +666,19 @@ function AvailabilityPanel({
         <PanelCard
           title="Folgas e férias"
           description="Bloqueie datas que sobrescrevem o horário semanal recorrente."
+          action={
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-2" variant="outline">
+                  <CalendarOff className="h-4 w-4" /> Bloquear datas
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <TimeOffForm doctorId={doctorId} />
+              </DialogContent>
+            </Dialog>
+          }
         >
-          <TimeOffForm doctorId={doctorId} />
           <div className="mt-4 space-y-2">
             {docTimeOff.length === 0 && (
               <EmptyState message="Nenhuma folga programada." />
@@ -720,47 +771,60 @@ function AvailabilityForm({
   };
 
   return (
-    <div className="grid gap-2 rounded-md border border-border bg-card p-3 sm:grid-cols-5">
-      <Field label="Dia">
-        <Select value={weekday} onValueChange={(v) => setWeekday(v as Weekday)}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {WEEKDAYS.map((d) => (
-              <SelectItem key={d.key} value={d.key}>
-                {d.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field label="Sala">
-        <Select value={locationId} onValueChange={setLocationId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Sala" />
-          </SelectTrigger>
-          <SelectContent>
-            {locations.map((l) => (
-              <SelectItem key={l.id} value={l.id}>
-                {l.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field label="Início">
-        <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
-      </Field>
-      <Field label="Fim">
-        <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
-      </Field>
-      <div className="flex items-end">
-        <Button onClick={submit} className="w-full gap-2">
-          <Plus className="h-4 w-4" /> Adicionar bloco
-        </Button>
+    <>
+      <DialogHeader>
+        <DialogTitle>Novo horário de atendimento</DialogTitle>
+        <DialogDescription>
+          Adicione um horário de disponibilidade semanal para o profissional.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="grid gap-4 py-2">
+        <Field label="Dia da semana">
+          <Select value={weekday} onValueChange={(v) => setWeekday(v as Weekday)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {WEEKDAYS.map((d) => (
+                <SelectItem key={d.key} value={d.key}>
+                  {d.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label="Sala">
+          <Select value={locationId} onValueChange={setLocationId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione a sala" />
+            </SelectTrigger>
+            <SelectContent>
+              {locations.map((l) => (
+                <SelectItem key={l.id} value={l.id}>
+                  {l.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Início">
+            <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+          </Field>
+          <Field label="Fim">
+            <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+          </Field>
+        </div>
       </div>
-    </div>
+      <DialogFooter>
+        <DialogTrigger asChild>
+          <Button variant="ghost">Cancelar</Button>
+        </DialogTrigger>
+        <DialogTrigger asChild>
+          <Button onClick={submit}>Adicionar horário</Button>
+        </DialogTrigger>
+      </DialogFooter>
+    </>
   );
 }
 
@@ -782,26 +846,41 @@ function TimeOffForm({ doctorId }: { doctorId: string }) {
   };
 
   return (
-    <div className="grid gap-2 rounded-md border border-border bg-card p-3 sm:grid-cols-4">
-      <Field label="De">
-        <Input type="date" value={starts} onChange={(e) => setStarts(e.target.value)} />
-      </Field>
-      <Field label="Até">
-        <Input type="date" value={ends} onChange={(e) => setEnds(e.target.value)} />
-      </Field>
-      <Field label="Motivo (opcional)">
-        <Input
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder="Férias, congresso…"
-        />
-      </Field>
-      <div className="flex items-end">
-        <Button onClick={submit} className="w-full gap-2">
-          <CalendarOff className="h-4 w-4" /> Bloquear datas
-        </Button>
+    <>
+      <DialogHeader>
+        <DialogTitle>Bloquear datas</DialogTitle>
+        <DialogDescription>
+          Adicione um período de folga, férias ou indisponibilidade.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="grid gap-4 py-2">
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="De">
+            <Input type="date" value={starts} onChange={(e) => setStarts(e.target.value)} />
+          </Field>
+          <Field label="Até">
+            <Input type="date" value={ends} onChange={(e) => setEnds(e.target.value)} />
+          </Field>
+        </div>
+        <Field label="Motivo (opcional)">
+          <Input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Férias, congresso…"
+          />
+        </Field>
       </div>
-    </div>
+      <DialogFooter>
+        <DialogTrigger asChild>
+          <Button variant="ghost">Cancelar</Button>
+        </DialogTrigger>
+        <DialogTrigger asChild>
+          <Button onClick={submit} className="gap-2">
+            <CalendarOff className="h-4 w-4" /> Confirmar bloqueio
+          </Button>
+        </DialogTrigger>
+      </DialogFooter>
+    </>
   );
 }
 

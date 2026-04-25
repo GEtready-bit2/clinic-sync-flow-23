@@ -6,7 +6,8 @@ import {
   useAppointments,
   type RescheduleConflict,
 } from "@/lib/appointments-store";
-import { clinic, locations, patients, profiles, services } from "@/lib/mock-data";
+import { usePatients } from "@/lib/patients-store";
+import { clinic, locations, profiles, services } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,8 +43,15 @@ const TIME_OPTIONS = (() => {
 export function NewAppointmentDialog() {
   const [open, setOpen] = useState(false);
   const doctors = useMemo(() => profiles.filter((p) => p.role === "doctor"), []);
+  const patients = usePatients();
 
-  const [patientId, setPatientId] = useState(patients[0]?.id ?? "");
+  const [patientId, setPatientId] = useState("");
+  useEffect(() => {
+    if (patients.length > 0 && !patientId) {
+      setPatientId(patients[0].id);
+    }
+  }, [patients, patientId]);
+
   const [doctorId, setDoctorId] = useState(doctors[0]?.id ?? "");
   const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
   const [locationId, setLocationId] = useState(locations[0]?.id ?? "");
@@ -296,6 +304,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function ConflictNotice({ conflict }: { conflict: RescheduleConflict }) {
+  const patients = usePatients();
   const other = conflict.with;
   const patient = patients.find((p) => p.id === other.patient_id);
   const doctor = profiles.find((p) => p.id === other.doctor_id);
