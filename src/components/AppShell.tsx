@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { useCurrentUser, auth } from "@/lib/auth-store";
 
 const roleLabel: Record<string, string> = {
-  super_admin: "Super Admin",
-  clinic_admin: "Clinic Admin",
-  doctor: "Doctor",
-  receptionist: "Receptionist",
-  patient: "Patient",
+  super_admin: "Super Administrador",
+  clinic_admin: "Administrador",
+  doctor: "Médico(a)",
+  receptionist: "Recepção",
+  patient: "Paciente",
 };
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -24,9 +24,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Activity className="h-4 w-4" />
             </div>
             <div className="leading-tight">
-              <div className="text-sm font-semibold tracking-tight">NexusPulse</div>
+              <div className="text-sm font-semibold tracking-tight">Clínica</div>
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Clinical Suite
+                Suíte Clínica
               </div>
             </div>
           </Link>
@@ -46,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   auth.signOut();
                   navigate({ to: "/login" });
                 }}
-                aria-label="Sign out"
+                aria-label="Sair"
               >
                 <LogOut className="h-4 w-4" />
               </Button>

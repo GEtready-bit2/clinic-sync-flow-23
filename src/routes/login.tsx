@@ -18,9 +18,9 @@ const ROLES: Array<{
   description: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { role: "receptionist", title: "Receptionist",  description: "Live front desk · drag-and-drop calendar", icon: ClipboardList },
-  { role: "doctor",       title: "Doctor",        description: "My schedule · patient EHR-light",          icon: Stethoscope },
-  { role: "clinic_admin", title: "Clinic Admin",  description: "Staff, services, locations",               icon: Building2 },
+  { role: "receptionist", title: "Recepção",       description: "Painel da recepção · agenda com arrastar e soltar", icon: ClipboardList },
+  { role: "doctor",       title: "Médico(a)",      description: "Minha agenda · prontuário simplificado",            icon: Stethoscope },
+  { role: "clinic_admin", title: "Administrador",  description: "Equipe, serviços e salas",                          icon: Building2 },
 ];
 
 function LoginPage() {
@@ -38,24 +38,24 @@ function LoginPage() {
         <div className="space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-medium text-primary backdrop-blur">
             <Activity className="h-3.5 w-3.5" />
-            NexusPulse · Clinical Suite
+            Suíte Clínica
           </div>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
-            Operate your clinic with{" "}
+            Opere sua clínica com{" "}
             <span className="bg-[image:var(--gradient-clinical)] bg-clip-text text-transparent">
-              calm precision.
+              precisão tranquila.
             </span>
           </h1>
           <p className="max-w-md text-base text-muted-foreground">
-            Multi-tenant scheduling for modern medical practices. Strict data
-            isolation, multi-location calendars, and a real-time front desk —
-            all in one quiet, dependable workspace.
+            Agendamento multi-tenant para clínicas modernas. Isolamento estrito
+            de dados, agendas multi-sala e um painel de recepção em tempo real —
+            tudo em um único espaço de trabalho confiável.
           </p>
           <ul className="space-y-2 text-sm text-muted-foreground">
             {[
-              "Per-clinic data isolation enforced at the database",
-              "No double-booking — doctor and room collisions blocked",
-              "Live front-desk status board with one-tap transitions",
+              "Isolamento de dados por clínica garantido no banco",
+              "Sem sobreposição — colisões de médico e sala bloqueadas",
+              "Painel de recepção ao vivo com transições em um toque",
             ].map((f) => (
               <li key={f} className="flex items-start gap-2">
                 <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
@@ -68,9 +68,9 @@ function LoginPage() {
         {/* Role picker */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-elevated)]">
           <div className="mb-4">
-            <h2 className="text-lg font-semibold">Continue as</h2>
+            <h2 className="text-lg font-semibold">Continuar como</h2>
             <p className="text-xs text-muted-foreground">
-              Demo mode — pick a role to enter the matching workspace.
+              Modo demonstração — escolha um papel para entrar no respectivo painel.
             </p>
           </div>
           <div className="grid gap-2">

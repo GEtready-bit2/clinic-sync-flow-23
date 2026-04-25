@@ -54,11 +54,11 @@ import {
 import type { Role, Weekday } from "@/lib/types";
 
 const roleLabel: Record<Role, string> = {
-  super_admin: "Super Admin",
-  clinic_admin: "Clinic Admin",
-  doctor: "Doctor",
-  receptionist: "Receptionist",
-  patient: "Patient",
+  super_admin: "Super Administrador",
+  clinic_admin: "Administrador",
+  doctor: "Médico(a)",
+  receptionist: "Recepção",
+  patient: "Paciente",
 };
 
 export function ClinicAdminDashboard() {
@@ -73,17 +73,17 @@ export function ClinicAdminDashboard() {
     <div className="mx-auto max-w-7xl px-4 py-6">
       <header className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Clinic administration</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Administração da clínica</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage your clinic&apos;s staff, services, rooms, and recurring schedules.
+            Gerencie equipe, serviços, salas e horários recorrentes da sua clínica.
           </p>
         </div>
         <StatGrid
           stats={[
-            { label: "Staff", value: staff.filter((s) => s.active).length },
-            { label: "Services", value: services.length },
-            { label: "Rooms", value: locations.length },
-            { label: "Schedules", value: availability.length },
+            { label: "Equipe", value: staff.filter((s) => s.active).length },
+            { label: "Serviços", value: services.length },
+            { label: "Salas", value: locations.length },
+            { label: "Horários", value: availability.length },
           ]}
         />
       </header>
@@ -91,16 +91,16 @@ export function ClinicAdminDashboard() {
       <Tabs defaultValue="staff" className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
           <TabsTrigger value="staff" className="gap-2">
-            <Users className="h-4 w-4" /> Staff
+            <Users className="h-4 w-4" /> Equipe
           </TabsTrigger>
           <TabsTrigger value="services" className="gap-2">
-            <Stethoscope className="h-4 w-4" /> Services
+            <Stethoscope className="h-4 w-4" /> Serviços
           </TabsTrigger>
           <TabsTrigger value="locations" className="gap-2">
-            <Building2 className="h-4 w-4" /> Rooms
+            <Building2 className="h-4 w-4" /> Salas
           </TabsTrigger>
           <TabsTrigger value="availability" className="gap-2">
-            <CalendarRange className="h-4 w-4" /> Availability
+            <CalendarRange className="h-4 w-4" /> Disponibilidade
           </TabsTrigger>
         </TabsList>
 
@@ -170,39 +170,39 @@ function StaffPanel() {
 
   return (
     <PanelCard
-      title="Staff & roles"
-      description="Invite new team members and deactivate access when someone leaves."
+      title="Equipe e papéis"
+      description="Convide novos membros e desative o acesso quando alguém sair."
       action={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2">
-              <UserPlus className="h-4 w-4" /> Invite staff
+              <UserPlus className="h-4 w-4" /> Convidar membro
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Invite a team member</DialogTitle>
+              <DialogTitle>Convidar membro da equipe</DialogTitle>
               <DialogDescription>
-                They&apos;ll receive an email to join your clinic with the assigned role.
+                Eles receberão um e-mail para entrar na clínica com o papel atribuído.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-2">
-              <Field label="Full name">
+              <Field label="Nome completo">
                 <Input
                   value={form.full_name}
                   onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                  placeholder="Dr. Jane Doe"
+                  placeholder="Dra. Maria Silva"
                 />
               </Field>
-              <Field label="Email">
+              <Field label="E-mail">
                 <Input
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="jane@clinic.com"
+                  placeholder="maria@clinica.com"
                 />
               </Field>
-              <Field label="Role">
+              <Field label="Papel">
                 <Select
                   value={form.role}
                   onValueChange={(v) => setForm({ ...form, role: v as Role })}
@@ -211,27 +211,27 @@ function StaffPanel() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="doctor">Doctor</SelectItem>
-                    <SelectItem value="receptionist">Receptionist</SelectItem>
-                    <SelectItem value="clinic_admin">Clinic Admin</SelectItem>
+                    <SelectItem value="doctor">Médico(a)</SelectItem>
+                    <SelectItem value="receptionist">Recepção</SelectItem>
+                    <SelectItem value="clinic_admin">Administrador</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>
               {form.role === "doctor" && (
-                <Field label="Specialty">
+                <Field label="Especialidade">
                   <Input
                     value={form.specialty}
                     onChange={(e) => setForm({ ...form, specialty: e.target.value })}
-                    placeholder="Cardiology"
+                    placeholder="Cardiologia"
                   />
                 </Field>
               )}
             </div>
             <DialogFooter>
               <Button variant="ghost" onClick={() => setOpen(false)}>
-                Cancel
+                Cancelar
               </Button>
-              <Button onClick={submit}>Send invite</Button>
+              <Button onClick={submit}>Enviar convite</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -240,15 +240,22 @@ function StaffPanel() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Specialty</TableHead>
+            <TableHead>Nome</TableHead>
+            <TableHead>E-mail</TableHead>
+            <TableHead>Papel</TableHead>
+            <TableHead>Especialidade</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
+          {staff.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                Nenhum membro cadastrado. Use “Convidar membro” para começar.
+              </TableCell>
+            </TableRow>
+          )}
           {staff.map((s) => (
             <TableRow key={s.id}>
               <TableCell className="font-medium">{s.full_name}</TableCell>
@@ -264,11 +271,11 @@ function StaffPanel() {
               <TableCell>
                 {s.active ? (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Active
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Ativo
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                    <XCircle className="h-3.5 w-3.5" /> Deactivated
+                    <XCircle className="h-3.5 w-3.5" /> Desativado
                   </span>
                 )}
               </TableCell>
@@ -278,7 +285,7 @@ function StaffPanel() {
                   variant={s.active ? "outline" : "default"}
                   onClick={() => clinicAdmin.toggleStaffActive(s.id)}
                 >
-                  {s.active ? "Deactivate" : "Reactivate"}
+                  {s.active ? "Desativar" : "Reativar"}
                 </Button>
               </TableCell>
             </TableRow>
@@ -326,8 +333,8 @@ function ServicesPanel() {
 
   return (
     <PanelCard
-      title="Services"
-      description="Service templates drive durations and color-coding across the calendar."
+      title="Serviços"
+      description="Modelos de serviço definem duração e cor no calendário."
       action={
         <Dialog
           open={open}
@@ -338,25 +345,25 @@ function ServicesPanel() {
         >
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2">
-              <Plus className="h-4 w-4" /> New service
+              <Plus className="h-4 w-4" /> Novo serviço
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{form.id ? "Edit service" : "New service"}</DialogTitle>
+              <DialogTitle>{form.id ? "Editar serviço" : "Novo serviço"}</DialogTitle>
               <DialogDescription>
-                Set name, duration, and a color used on the calendar.
+                Defina nome, duração e cor usada no calendário.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-2">
-              <Field label="Name">
+              <Field label="Nome">
                 <Input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="General consultation"
+                  placeholder="Consulta geral"
                 />
               </Field>
-              <Field label="Duration (minutes)">
+              <Field label="Duração (minutos)">
                 <Input
                   type="number"
                   min={5}
@@ -367,7 +374,7 @@ function ServicesPanel() {
                   }
                 />
               </Field>
-              <Field label="Color">
+              <Field label="Cor">
                 <div className="flex flex-wrap gap-2">
                   {SERVICE_COLORS.map((c) => (
                     <button
@@ -378,7 +385,7 @@ function ServicesPanel() {
                         form.color === c ? "border-foreground" : "border-transparent"
                       }`}
                       style={{ background: c }}
-                      aria-label="Select color"
+                      aria-label="Selecionar cor"
                     />
                   ))}
                 </div>
@@ -386,9 +393,9 @@ function ServicesPanel() {
             </div>
             <DialogFooter>
               <Button variant="ghost" onClick={() => setOpen(false)}>
-                Cancel
+                Cancelar
               </Button>
-              <Button onClick={submit}>{form.id ? "Save changes" : "Create service"}</Button>
+              <Button onClick={submit}>{form.id ? "Salvar alterações" : "Criar serviço"}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -424,13 +431,13 @@ function ServicesPanel() {
                   setOpen(true);
                 }}
               >
-                Edit
+                Editar
               </Button>
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={() => clinicAdmin.removeService(s.id)}
-                aria-label="Delete"
+                aria-label="Excluir"
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
@@ -438,7 +445,7 @@ function ServicesPanel() {
           </div>
         ))}
         {services.length === 0 && (
-          <EmptyState message="No services yet. Add one to start scheduling." />
+          <EmptyState message="Nenhum serviço ainda. Adicione um para começar a agendar." />
         )}
       </div>
     </PanelCard>
@@ -461,18 +468,18 @@ function LocationsPanel() {
 
   return (
     <PanelCard
-      title="Rooms & locations"
-      description="Physical rooms used for scheduling. The engine prevents double-booking a room."
+      title="Salas e locais"
+      description="Salas físicas usadas no agendamento. O sistema impede a sobreposição de uma mesma sala."
     >
       <div className="mb-4 flex flex-col gap-2 sm:flex-row">
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder={editingId ? "Update room name" : "e.g. Consult Room 4"}
+          placeholder={editingId ? "Atualizar nome da sala" : "ex.: Consultório 4"}
           onKeyDown={(e) => e.key === "Enter" && submit()}
         />
         <Button onClick={submit} className="gap-2">
-          {editingId ? "Save" : <><Plus className="h-4 w-4" /> Add room</>}
+          {editingId ? "Salvar" : <><Plus className="h-4 w-4" /> Adicionar sala</>}
         </Button>
         {editingId && (
           <Button
@@ -482,7 +489,7 @@ function LocationsPanel() {
               setName("");
             }}
           >
-            Cancel
+            Cancelar
           </Button>
         )}
       </div>
@@ -505,7 +512,7 @@ function LocationsPanel() {
                   setName(l.name);
                 }}
               >
-                Edit
+                Editar
               </Button>
               <Button
                 size="icon"
@@ -517,7 +524,7 @@ function LocationsPanel() {
             </div>
           </div>
         ))}
-        {locations.length === 0 && <EmptyState message="No rooms configured yet." />}
+        {locations.length === 0 && <EmptyState message="Nenhuma sala cadastrada ainda." />}
       </div>
     </PanelCard>
   );
@@ -553,14 +560,14 @@ function AvailabilityPanel({
   return (
     <div className="space-y-4">
       <PanelCard
-        title="Recurring weekly availability"
-        description="Configure each doctor's working hours per day and room."
+        title="Disponibilidade semanal recorrente"
+        description="Configure os horários de trabalho de cada médico por dia e sala."
       >
         <div className="mb-4 flex items-center gap-3">
-          <Label className="text-sm">Doctor</Label>
+          <Label className="text-sm">Médico</Label>
           <Select value={doctorId} onValueChange={setDoctorId}>
             <SelectTrigger className="w-64">
-              <SelectValue placeholder="Pick a doctor" />
+              <SelectValue placeholder="Selecione um médico" />
             </SelectTrigger>
             <SelectContent>
               {doctors.map((d) => (
@@ -574,7 +581,7 @@ function AvailabilityPanel({
         </div>
 
         {!activeDoctor ? (
-          <EmptyState message="Add a doctor in the Staff tab first." />
+          <EmptyState message="Cadastre um médico na aba Equipe primeiro." />
         ) : (
           <>
             <WeeklyGrid availability={docAvailability} />
@@ -582,18 +589,19 @@ function AvailabilityPanel({
             {docAvailability.length > 0 && (
               <div className="mt-4">
                 <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Active blocks
+                  Blocos ativos
                 </h4>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {docAvailability.map((a) => {
                     const loc = locations.find((l) => l.id === a.location_id);
+                    const wdLabel = ({ mon: "Seg", tue: "Ter", wed: "Qua", thu: "Qui", fri: "Sex", sat: "Sáb", sun: "Dom" } as const)[a.weekday];
                     return (
                       <div
                         key={a.id}
                         className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm"
                       >
                         <span>
-                          <span className="font-medium capitalize">{a.weekday}</span>{" "}
+                          <span className="font-medium">{wdLabel}</span>{" "}
                           · {a.start_time}–{a.end_time}{" "}
                           <span className="text-muted-foreground">@ {loc?.name ?? "—"}</span>
                         </span>
@@ -616,13 +624,13 @@ function AvailabilityPanel({
 
       {activeDoctor && (
         <PanelCard
-          title="Time off & vacation overrides"
-          description="Block out dates that override the recurring weekly schedule."
+          title="Folgas e férias"
+          description="Bloqueie datas que sobrescrevem o horário semanal recorrente."
         >
           <TimeOffForm doctorId={doctorId} />
           <div className="mt-4 space-y-2">
             {docTimeOff.length === 0 && (
-              <EmptyState message="No upcoming time off scheduled." />
+              <EmptyState message="Nenhuma folga programada." />
             )}
             {docTimeOff.map((t) => (
               <div
@@ -713,7 +721,7 @@ function AvailabilityForm({
 
   return (
     <div className="grid gap-2 rounded-md border border-border bg-card p-3 sm:grid-cols-5">
-      <Field label="Day">
+      <Field label="Dia">
         <Select value={weekday} onValueChange={(v) => setWeekday(v as Weekday)}>
           <SelectTrigger>
             <SelectValue />
@@ -727,10 +735,10 @@ function AvailabilityForm({
           </SelectContent>
         </Select>
       </Field>
-      <Field label="Room">
+      <Field label="Sala">
         <Select value={locationId} onValueChange={setLocationId}>
           <SelectTrigger>
-            <SelectValue placeholder="Room" />
+            <SelectValue placeholder="Sala" />
           </SelectTrigger>
           <SelectContent>
             {locations.map((l) => (
@@ -741,15 +749,15 @@ function AvailabilityForm({
           </SelectContent>
         </Select>
       </Field>
-      <Field label="Start">
+      <Field label="Início">
         <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
       </Field>
-      <Field label="End">
+      <Field label="Fim">
         <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
       </Field>
       <div className="flex items-end">
         <Button onClick={submit} className="w-full gap-2">
-          <Plus className="h-4 w-4" /> Add block
+          <Plus className="h-4 w-4" /> Adicionar bloco
         </Button>
       </div>
     </div>
@@ -775,22 +783,22 @@ function TimeOffForm({ doctorId }: { doctorId: string }) {
 
   return (
     <div className="grid gap-2 rounded-md border border-border bg-card p-3 sm:grid-cols-4">
-      <Field label="From">
+      <Field label="De">
         <Input type="date" value={starts} onChange={(e) => setStarts(e.target.value)} />
       </Field>
-      <Field label="To">
+      <Field label="Até">
         <Input type="date" value={ends} onChange={(e) => setEnds(e.target.value)} />
       </Field>
-      <Field label="Reason (optional)">
+      <Field label="Motivo (opcional)">
         <Input
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Vacation, conference…"
+          placeholder="Férias, congresso…"
         />
       </Field>
       <div className="flex items-end">
         <Button onClick={submit} className="w-full gap-2">
-          <CalendarOff className="h-4 w-4" /> Block dates
+          <CalendarOff className="h-4 w-4" /> Bloquear datas
         </Button>
       </div>
     </div>

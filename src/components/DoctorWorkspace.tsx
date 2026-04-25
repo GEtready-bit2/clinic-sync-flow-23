@@ -6,6 +6,7 @@ import {
   isSameDay,
   startOfWeek,
 } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   Activity,
   CalendarDays,
@@ -107,20 +108,20 @@ export function DoctorWorkspace() {
         <div>
           <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
             <Stethoscope className="h-3.5 w-3.5" />
-            {me.specialty ?? "Clinician"}
+            {me.specialty ?? "Clínico(a)"}
           </div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-            Welcome, {me.full_name.replace(/^Dr\.\s*/, "Dr. ")}
+            Bem-vindo(a), {me.full_name}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {format(today, "EEEE, MMMM d")} · {stats.today} on the books today
+            {format(today, "EEEE, d 'de' MMMM", { locale: ptBR })} · {stats.today} consulta{stats.today === 1 ? "" : "s"} hoje
           </p>
         </div>
         <div className="grid grid-cols-4 gap-3">
-          <Stat label="Today" value={stats.today} />
-          <Stat label="In clinic" value={stats.inClinic} tone="primary" />
-          <Stat label="Completed" value={stats.completed} tone="success" />
-          <Stat label="Patients" value={stats.patients} />
+          <Stat label="Hoje" value={stats.today} />
+          <Stat label="Na clínica" value={stats.inClinic} tone="primary" />
+          <Stat label="Concluídas" value={stats.completed} tone="success" />
+          <Stat label="Pacientes" value={stats.patients} />
         </div>
       </div>
 
@@ -128,15 +129,15 @@ export function DoctorWorkspace() {
         <TabsList>
           <TabsTrigger value="schedule" className="gap-1.5">
             <CalendarDays className="h-3.5 w-3.5" />
-            Schedule
+            Agenda
           </TabsTrigger>
           <TabsTrigger value="patients" className="gap-1.5">
             <Users className="h-3.5 w-3.5" />
-            My patients
+            Meus pacientes
           </TabsTrigger>
           <TabsTrigger value="notes" className="gap-1.5">
             <FileText className="h-3.5 w-3.5" />
-            Visit notes
+            Anotações
           </TabsTrigger>
         </TabsList>
 
@@ -222,10 +223,10 @@ function WeekStrip({
     <div className="rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
       <div className="mb-2 flex items-center justify-between">
         <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Week of {format(start, "MMM d")} – {format(end, "MMM d")}
+          Semana de {format(start, "d 'de' MMM", { locale: ptBR })} – {format(end, "d 'de' MMM", { locale: ptBR })}
         </div>
         <div className="text-[11px] text-muted-foreground">
-          Tap a day to view
+          Toque em um dia para visualizar
         </div>
       </div>
       <div className="grid grid-cols-7 gap-2">
@@ -246,10 +247,10 @@ function WeekStrip({
               }`}
             >
               <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                {format(d, "EEE")}
+                {format(d, "EEE", { locale: ptBR })}
                 {isToday && (
                   <span className="rounded bg-primary px-1 py-0.5 text-[9px] font-semibold text-primary-foreground">
-                    TODAY
+                    HOJE
                   </span>
                 )}
               </div>
@@ -257,7 +258,7 @@ function WeekStrip({
                 {format(d, "d")}
               </div>
               <div className="text-[11px] text-muted-foreground">
-                {count} {count === 1 ? "visit" : "visits"}
+                {count} {count === 1 ? "consulta" : "consultas"}
               </div>
             </button>
           );
@@ -281,15 +282,14 @@ function DayColumn({
   return (
     <div className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
       <div className="border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold">{format(date, "EEEE, MMM d")}</h2>
+        <h2 className="text-sm font-semibold">{format(date, "EEEE, d 'de' MMM", { locale: ptBR })}</h2>
         <p className="text-xs text-muted-foreground">
-          {appts.length} appointment{appts.length === 1 ? "" : "s"} · 8:00 to
-          18:00
+          {appts.length} consulta{appts.length === 1 ? "" : "s"} · 8:00 às 18:00
         </p>
       </div>
       <div className="overflow-x-auto">
         <div className="relative flex min-w-fit">
-          {/* Hour gutter */}
+          {/* Coluna de horas */}
           <div className="sticky left-0 z-10 flex w-14 flex-col border-r border-border bg-card">
             {HOURS.map((h) => (
               <div
@@ -301,7 +301,7 @@ function DayColumn({
               </div>
             ))}
           </div>
-          {/* Single column */}
+          {/* Coluna única */}
           <div className="flex-1">
             <div
               className="relative"
@@ -316,7 +316,7 @@ function DayColumn({
               ))}
               {appts.length === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-                  No appointments scheduled.
+                  Nenhuma consulta agendada.
                 </div>
               )}
               {appts.map((a) => (
@@ -397,16 +397,16 @@ function TodayQueue({
       <div className="border-b border-border px-4 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <Activity className="h-4 w-4 text-primary" />
-          Today's queue
+          Fila de hoje
         </h2>
         <p className="text-xs text-muted-foreground">
-          Tap to open · jump to notes from any visit
+          Toque para abrir · vá direto às anotações
         </p>
       </div>
       <ul className="max-h-[560px] divide-y divide-border overflow-y-auto">
         {appts.length === 0 && (
           <li className="px-4 py-10 text-center text-sm text-muted-foreground">
-            Nothing scheduled today. Enjoy the breather.
+            Nada agendado para hoje. Aproveite a pausa.
           </li>
         )}
         {appts.map((a) => {
@@ -472,15 +472,15 @@ function PatientList({
       <div className="border-b border-border px-4 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <ClipboardList className="h-4 w-4 text-primary" />
-          My patients ({rows.length})
+          Meus pacientes ({rows.length})
         </h2>
         <p className="text-xs text-muted-foreground">
-          Pulled from your appointment history
+          Extraídos do seu histórico de consultas
         </p>
       </div>
       {rows.length === 0 ? (
         <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-          No patients yet — once appointments are booked they'll appear here.
+          Sem pacientes ainda — assim que houver consultas, eles aparecerão aqui.
         </div>
       ) : (
         <ul className="divide-y divide-border">
@@ -512,7 +512,7 @@ function PatientList({
                         {patient.full_name}
                       </div>
                       <div className="truncate text-xs text-muted-foreground">
-                        DOB {patient.date_of_birth} · {patient.phone}
+                        Nasc. {patient.date_of_birth} · {patient.phone}
                         {patient.allergies && (
                           <span className="ml-2 rounded bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
                             ⚠ {patient.allergies}
@@ -523,10 +523,10 @@ function PatientList({
                   </div>
                   <div className="hidden text-right sm:block">
                     <div className="text-xs font-medium">
-                      {visits} visit{visits === 1 ? "" : "s"}
+                      {visits} consulta{visits === 1 ? "" : "s"}
                     </div>
                     <div className="text-[11px] text-muted-foreground">
-                      Last {format(lastVisit, "MMM d")}
+                      Última {format(lastVisit, "d 'de' MMM", { locale: ptBR })}
                     </div>
                   </div>
                 </button>
@@ -542,7 +542,7 @@ function PatientList({
                         >
                           <span className="flex items-center gap-2">
                             <Clock className="h-3 w-3 text-muted-foreground" />
-                            {format(new Date(a.starts_at), "MMM d, HH:mm")}
+                            {format(new Date(a.starts_at), "d 'de' MMM, HH:mm", { locale: ptBR })}
                             <span className="text-muted-foreground">
                               · {svc?.name}
                             </span>
@@ -582,15 +582,15 @@ function NotesEditor({
       {/* Visit picker */}
       <div className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
         <div className="border-b border-border px-4 py-3">
-          <h2 className="text-sm font-semibold">Recent visits</h2>
+          <h2 className="text-sm font-semibold">Consultas recentes</h2>
           <p className="text-xs text-muted-foreground">
-            Pick a visit to write or review notes
+            Selecione uma consulta para escrever ou revisar anotações
           </p>
         </div>
         <ul className="max-h-[520px] divide-y divide-border overflow-y-auto">
           {recent.length === 0 && (
             <li className="px-4 py-8 text-center text-xs text-muted-foreground">
-              No completed visits yet.
+              Nenhuma consulta concluída ainda.
             </li>
           )}
           {recent.map((a) => {
@@ -607,7 +607,7 @@ function NotesEditor({
                 >
                   <div className="text-sm font-semibold">{p?.full_name}</div>
                   <div className="text-[11px] text-muted-foreground">
-                    {format(new Date(a.starts_at), "MMM d, HH:mm")} · {s?.name}
+                    {format(new Date(a.starts_at), "d 'de' MMM, HH:mm", { locale: ptBR })} · {s?.name}
                   </div>
                 </button>
               </li>
@@ -621,10 +621,11 @@ function NotesEditor({
         {!appt ? (
           <div className="flex h-full min-h-[420px] flex-col items-center justify-center gap-2 px-6 py-16 text-center">
             <FileText className="h-8 w-8 text-muted-foreground" />
-            <div className="text-sm font-medium">Select a visit</div>
+            <div className="text-sm font-medium">Selecione uma consulta</div>
             <div className="max-w-sm text-xs text-muted-foreground">
-              Notes are visible only to clinicians on this clinic. Pick a visit
-              from the list — or jump in from the Schedule or Patients tab.
+              As anotações são visíveis apenas para clínicos desta clínica.
+              Selecione uma consulta na lista — ou abra a partir das abas
+              Agenda ou Pacientes.
             </div>
           </div>
         ) : (
@@ -669,13 +670,13 @@ function NoteForm({ appt, authorId }: { appt: Appointment; authorId: string }) {
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               <FileText className="h-3.5 w-3.5" />
-              Visit note
+              Anotação da consulta
             </div>
             <h3 className="mt-0.5 truncate text-lg font-semibold">
               {patient?.full_name}
             </h3>
             <div className="text-xs text-muted-foreground">
-              {format(new Date(appt.starts_at), "EEE, MMM d · HH:mm")} –{" "}
+              {format(new Date(appt.starts_at), "EEE, d 'de' MMM · HH:mm", { locale: ptBR })} –{" "}
               {format(new Date(appt.ends_at), "HH:mm")} · {service?.name} ·{" "}
               {location?.name}
             </div>
@@ -685,14 +686,14 @@ function NoteForm({ appt, authorId }: { appt: Appointment; authorId: string }) {
         {patient && (
           <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
             <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 text-muted-foreground">
-              DOB {patient.date_of_birth}
+              Nasc. {patient.date_of_birth}
             </span>
             <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 text-muted-foreground">
               {patient.phone}
             </span>
             {patient.allergies && (
               <span className="rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 font-medium text-destructive">
-                ⚠ Allergies: {patient.allergies}
+                ⚠ Alergias: {patient.allergies}
               </span>
             )}
           </div>
@@ -705,29 +706,28 @@ function NoteForm({ appt, authorId }: { appt: Appointment; authorId: string }) {
             setBody(e.target.value);
             setSaved(false);
           }}
-          placeholder="Subjective · Objective · Assessment · Plan…"
+          placeholder="Subjetivo · Objetivo · Avaliação · Plano…"
           className="min-h-[280px] resize-y font-mono text-sm leading-relaxed"
         />
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Stored privately under <code>appointment_notes</code> — RLS restricts
-          read/write to clinicians of this clinic.
+          Armazenado de forma privada — restrito aos clínicos desta clínica.
         </p>
       </div>
       <div className="flex items-center justify-between border-t border-border px-5 py-3">
         <div className="text-xs text-muted-foreground">
           {existing
-            ? `Last saved ${format(new Date(existing.updated_at), "MMM d, HH:mm")}`
-            : "Unsaved draft"}
+            ? `Salvo em ${format(new Date(existing.updated_at), "d 'de' MMM, HH:mm", { locale: ptBR })}`
+            : "Rascunho não salvo"}
         </div>
         <div className="flex items-center gap-2">
           {saved && (
             <span className="text-xs font-medium text-[oklch(0.55_0.13_160)]">
-              Saved
+              Salvo
             </span>
           )}
           <Button onClick={handleSave} disabled={!body.trim()} className="gap-1.5">
             <Save className="h-3.5 w-3.5" />
-            Save note
+            Salvar anotação
           </Button>
         </div>
       </div>

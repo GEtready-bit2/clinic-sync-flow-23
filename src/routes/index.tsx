@@ -31,22 +31,22 @@ function RoleView({ role }: { role: Role }) {
 }
 
 const meta: Record<Role, { title: string; body: string }> = {
-  receptionist: { title: "Receptionist", body: "Front-desk dashboard." },
+  receptionist: { title: "Recepção", body: "Painel da recepção." },
   doctor: {
-    title: "Doctor's workspace",
-    body: "Your day-by-day schedule, patient list, and EHR-light notes will live here.",
+    title: "Espaço do médico",
+    body: "Sua agenda diária, lista de pacientes e prontuário simplificado.",
   },
   clinic_admin: {
-    title: "Clinic administration",
-    body: "Manage staff, services, rooms, and recurring availability for your clinic.",
+    title: "Administração da clínica",
+    body: "Gerencie equipe, serviços, salas e disponibilidade recorrente.",
   },
   patient: {
-    title: "Book your visit",
-    body: "The patient booking portal — pick a service, doctor, and an available slot.",
+    title: "Agendar consulta",
+    body: "Portal do paciente — escolha um serviço, médico e horário disponível.",
   },
   super_admin: {
-    title: "Platform control",
-    body: "Onboard new clinics and oversee tenant configuration.",
+    title: "Controle da plataforma",
+    body: "Cadastre novas clínicas e supervisione a configuração dos tenants.",
   },
 };
 
@@ -55,13 +55,13 @@ function PlaceholderForRole({ role }: { role: Role }) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 text-center">
       <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-primary">
-        Coming next
+        Em breve
       </div>
       <h1 className="text-3xl font-semibold tracking-tight">{m.title}</h1>
       <p className="mt-3 text-sm text-muted-foreground">{m.body}</p>
       <p className="mt-6 text-xs text-muted-foreground">
-        Sign out from the top right to switch roles and explore the receptionist
-        dashboard.
+        Saia pelo canto superior direito para trocar de papel e explorar o
+        painel da recepção.
       </p>
     </div>
   );

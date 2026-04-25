@@ -146,22 +146,27 @@ export function NewAppointmentDialog() {
       <DialogTrigger asChild>
         <Button size="sm" className="gap-1.5">
           <CalendarPlus className="h-4 w-4" />
-          New appointment
+          Nova consulta
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle>New appointment</DialogTitle>
+          <DialogTitle>Nova consulta</DialogTitle>
           <DialogDescription>
-            Double-booking of doctor or room is blocked, just like drag-and-drop.
+            Sobreposição de médico ou sala é bloqueada, igual ao arrastar e soltar.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
-          <Field label="Patient">
+          <Field label="Paciente">
             <Select value={patientId} onValueChange={setPatientId}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Selecionar paciente" /></SelectTrigger>
               <SelectContent>
+                {patients.length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground">
+                    Nenhum paciente cadastrado.
+                  </div>
+                )}
                 {patients.map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
                 ))}
@@ -170,9 +175,9 @@ export function NewAppointmentDialog() {
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Doctor">
+            <Field label="Médico">
               <Select value={doctorId} onValueChange={setDoctorId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecionar médico" /></SelectTrigger>
                 <SelectContent>
                   {doctors.map((d) => (
                     <SelectItem key={d.id} value={d.id}>
@@ -182,10 +187,15 @@ export function NewAppointmentDialog() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Room">
+            <Field label="Sala">
               <Select value={locationId} onValueChange={setLocationId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecionar sala" /></SelectTrigger>
                 <SelectContent>
+                  {locations.length === 0 && (
+                    <div className="px-2 py-3 text-xs text-muted-foreground">
+                      Nenhuma sala cadastrada.
+                    </div>
+                  )}
                   {locations.map((l) => (
                     <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
                   ))}
@@ -194,13 +204,18 @@ export function NewAppointmentDialog() {
             </Field>
           </div>
 
-          <Field label="Service">
+          <Field label="Serviço">
             <Select value={serviceId} onValueChange={setServiceId}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Selecionar serviço" /></SelectTrigger>
               <SelectContent>
+                {services.length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground">
+                    Nenhum serviço cadastrado.
+                  </div>
+                )}
                 {services.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
-                    {s.name} · {s.duration_min}m
+                    {s.name} · {s.duration_min}min
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -208,14 +223,14 @@ export function NewAppointmentDialog() {
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Date">
+            <Field label="Data">
               <Input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
             </Field>
-            <Field label="Start time">
+            <Field label="Horário de início">
               <Select value={time} onValueChange={setTime}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-64">
@@ -232,7 +247,7 @@ export function NewAppointmentDialog() {
                           <span>{t}</span>
                           {c && (
                             <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                              {c === "doctor" ? "doctor busy" : "room busy"}
+                              {c === "doctor" ? "médico ocupado" : "sala ocupada"}
                             </span>
                           )}
                         </span>
@@ -244,11 +259,11 @@ export function NewAppointmentDialog() {
             </Field>
           </div>
 
-          <Field label="Notes (optional)">
+          <Field label="Observações (opcional)">
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Reason for visit, special instructions…"
+              placeholder="Motivo da visita, instruções especiais…"
               rows={2}
             />
           </Field>
@@ -257,14 +272,14 @@ export function NewAppointmentDialog() {
           {success && (
             <div className="flex items-center gap-2 rounded-md border border-[oklch(0.85_0.08_160)] bg-[oklch(0.96_0.04_160)] px-3 py-2 text-sm text-[oklch(0.4_0.13_160)]">
               <Check className="h-4 w-4" />
-              Appointment booked.
+              Consulta agendada.
             </div>
           )}
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={submit}>Book appointment</Button>
+          <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={submit}>Agendar consulta</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -290,10 +305,10 @@ function ConflictNotice({ conflict }: { conflict: RescheduleConflict }) {
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
       <div>
         <div className="font-semibold">
-          {conflict.kind === "doctor" ? "Doctor" : "Room"} double-booking blocked
+          Sobreposição de {conflict.kind === "doctor" ? "médico" : "sala"} bloqueada
         </div>
         <div className="text-xs opacity-90">
-          Conflicts with {patient?.full_name} at{" "}
+          Conflito com {patient?.full_name} às{" "}
           {format(new Date(other.starts_at), "HH:mm")} (
           {conflict.kind === "doctor" ? doctor?.full_name : room?.name}).
         </div>
