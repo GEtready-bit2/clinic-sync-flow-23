@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { format, isSameDay } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   DndContext,
   PointerSensor,
@@ -34,6 +35,7 @@ const HOUR_PX = 64;
 const SLOT_MIN = 15; // drop granularity in minutes
 const SLOTS_PER_HOUR = 60 / SLOT_MIN;
 const SLOT_PX = HOUR_PX / SLOTS_PER_HOUR;
+const MIN_CARD_PX = 64; // garante leitura completa mesmo em consultas curtas
 
 const QUICK_TRANSITIONS: AppointmentStatus[] = [
   "confirmed",
@@ -90,7 +92,6 @@ export function ReceptionistDashboard() {
     const apptId = String(e.active.id);
     const overId = e.over?.id ? String(e.over.id) : null;
     if (!overId) return;
-    // overId format: "slot::<doctorId>::<HH:MM>"
     const [, doctorId, time] = overId.split("::");
     if (!doctorId || !time) return;
     const [h, m] = time.split(":").map(Number);
@@ -109,39 +110,39 @@ export function ReceptionistDashboard() {
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-6 px-4 py-6">
-      {/* Header */}
+      {/* Cabeçalho */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
             <Calendar className="h-3.5 w-3.5" />
-            {format(today, "EEEE")}
+            {format(today, "EEEE", { locale: ptBR })}
           </div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-            {format(today, "MMMM d, yyyy")}
+            {format(today, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Live front desk · NexusPulse Medical Center
+            Recepção em tempo real
           </p>
         </div>
         <div className="flex flex-col gap-3 md:items-end">
           <NewAppointmentDialog />
           <div className="grid grid-cols-4 gap-3">
-            <Stat label="Today" value={stats.total} />
-            <Stat label="Upcoming" value={stats.upcoming} tone="primary" />
-            <Stat label="In clinic" value={stats.checked} tone="success" />
-            <Stat label="No-show" value={stats.noShow} tone="destructive" />
+            <Stat label="Hoje" value={stats.total} />
+            <Stat label="Próximos" value={stats.upcoming} tone="primary" />
+            <Stat label="Na clínica" value={stats.checked} tone="success" />
+            <Stat label="Faltas" value={stats.noShow} tone="destructive" />
           </div>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filtros */}
       <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)] md:flex-row md:items-center">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search patients..."
+            placeholder="Buscar paciente..."
             className="pl-9"
           />
         </div>
@@ -150,7 +151,7 @@ export function ReceptionistDashboard() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All doctors</SelectItem>
+            <SelectItem value="all">Todos os médicos</SelectItem>
             {doctors.map((d) => (
               <SelectItem key={d.id} value={d.id}>
                 {d.full_name} · {d.specialty}
@@ -164,17 +165,17 @@ export function ReceptionistDashboard() {
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-          {/* Calendar */}
+          {/* Agenda */}
           <div className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
             <div className="border-b border-border px-4 py-3">
-              <h2 className="text-sm font-semibold">Day schedule</h2>
+              <h2 className="text-sm font-semibold">Agenda do dia</h2>
               <p className="text-xs text-muted-foreground">
-                Drag a card to reschedule · 15-minute snap · double-booking blocked
+                Arraste um cartão para reagendar · grade de 15 min · sem sobreposição
               </p>
             </div>
             <div className="overflow-x-auto">
               <div className="relative flex min-w-fit">
-                {/* Hour gutter */}
+                {/* Coluna de horas */}
                 <div className="sticky left-0 z-10 flex w-14 flex-col border-r border-border bg-card">
                   <div className="h-10" />
                   {HOURS.map((h) => (
@@ -187,7 +188,13 @@ export function ReceptionistDashboard() {
                     </div>
                   ))}
                 </div>
-                {/* Doctor columns */}
+                {/* Colunas dos médicos */}
+                {visibleDoctors.length === 0 && (
+                  <div className="flex flex-1 items-center justify-center px-6 py-16 text-sm text-muted-foreground">
+                    Nenhum médico cadastrado. Adicione profissionais em
+                    Administração da clínica.
+                  </div>
+                )}
                 {visibleDoctors.map((doc) => (
                   <div
                     key={doc.id}
@@ -220,21 +227,21 @@ export function ReceptionistDashboard() {
             </div>
           </div>
 
-          {/* Live Front Desk */}
+          {/* Painel da recepção */}
           <div className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
             <div className="border-b border-border px-4 py-3">
               <h2 className="flex items-center gap-2 text-sm font-semibold">
                 <UserCheck className="h-4 w-4 text-primary" />
-                Live front desk
+                Recepção em tempo real
               </h2>
               <p className="text-xs text-muted-foreground">
-                Tap a status to advance the visit
+                Toque em um status para avançar a consulta
               </p>
             </div>
             <ul className="max-h-[560px] divide-y divide-border overflow-y-auto">
               {dayAppts.length === 0 && (
                 <li className="px-4 py-10 text-center text-sm text-muted-foreground">
-                  No appointments match your filters.
+                  Nenhuma consulta encontrada com os filtros atuais.
                 </li>
               )}
               {dayAppts.map((a) => (
@@ -263,11 +270,11 @@ function ConflictBanner({ conflict }: { conflict: RescheduleConflict }) {
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
       <div>
         <div className="font-semibold">
-          Reschedule blocked — {conflict.kind === "doctor" ? "doctor" : "room"}{" "}
-          double-booking
+          Reagendamento bloqueado — sobreposição de{" "}
+          {conflict.kind === "doctor" ? "médico" : "sala"}
         </div>
         <div className="text-xs opacity-90">
-          Conflicts with {patient?.full_name} at {format(new Date(other.starts_at), "HH:mm")}{" "}
+          Conflito com {patient?.full_name} às {format(new Date(other.starts_at), "HH:mm")}{" "}
           ({conflict.kind === "doctor" ? doctor?.full_name : room?.name}).
         </div>
       </div>
@@ -282,7 +289,6 @@ function DoctorColumn({
   doctorId: string;
   children: React.ReactNode;
 }) {
-  // Build SLOTS_PER_HOUR * HOURS.length droppable slots so dnd-kit can snap to 15-min increments.
   const slots = HOURS.flatMap((h) =>
     Array.from({ length: SLOTS_PER_HOUR }, (_, s) => ({
       h,
@@ -370,7 +376,10 @@ function ApptBlock({
   const startMinutes = (start.getHours() - 8) * 60 + start.getMinutes();
   const durationMin = (end.getTime() - start.getTime()) / 60_000;
   const top = (startMinutes / 60) * HOUR_PX;
-  const height = (durationMin / 60) * HOUR_PX - 2;
+  // Altura natural baseada na duração, mas com piso para que TODAS as informações
+  // do cartão fiquem visíveis mesmo em consultas curtas (15/30 min).
+  const naturalHeight = (durationMin / 60) * HOUR_PX - 2;
+  const height = Math.max(naturalHeight, MIN_CARD_PX);
   const patient = patients.find((p) => p.id === appt.patient_id);
   const service = services.find((s) => s.id === appt.service_id);
   const location = locations.find((l) => l.id === appt.location_id);
@@ -386,11 +395,12 @@ function ApptBlock({
   const dragStyle: React.CSSProperties = {
     top,
     height,
+    minHeight: MIN_CARD_PX,
     borderLeftColor: service?.color,
     transform: transform
       ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
       : undefined,
-    zIndex: isDragging ? 30 : 1,
+    zIndex: isDragging ? 30 : naturalHeight < MIN_CARD_PX ? 5 : 1,
     opacity: isDragging ? 0.85 : 1,
     cursor: isDragging ? "grabbing" : "grab",
   };
@@ -402,19 +412,19 @@ function ApptBlock({
       onClick={onSelect}
       {...listeners}
       {...attributes}
-      className={`absolute inset-x-1 flex flex-col overflow-hidden rounded-md border border-border border-l-4 bg-card px-2 py-1 text-left text-xs shadow-[var(--shadow-card)] transition hover:shadow-[var(--shadow-elevated)] ${dim} ${selected ? "ring-2 ring-primary" : ""} ${isDragging ? "shadow-[var(--shadow-elevated)]" : ""}`}
+      className={`absolute inset-x-1 flex flex-col gap-0.5 overflow-hidden rounded-md border border-border border-l-4 bg-card px-2 py-1.5 text-left text-xs shadow-[var(--shadow-card)] transition hover:shadow-[var(--shadow-elevated)] hover:z-20 ${dim} ${selected ? "ring-2 ring-primary z-20" : ""} ${isDragging ? "shadow-[var(--shadow-elevated)]" : ""}`}
     >
       <div className="flex items-start gap-1">
         <GripVertical className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground/60" />
-        <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold text-foreground">
-            {patient?.full_name}
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <div className="truncate text-[12px] font-semibold leading-tight text-foreground">
+            {patient?.full_name ?? "Paciente"}
           </div>
-          <div className="truncate text-[10px] text-muted-foreground">
-            {format(start, "HH:mm")} · {service?.name}
+          <div className="truncate text-[10px] leading-tight text-muted-foreground">
+            {format(start, "HH:mm")}–{format(end, "HH:mm")} · {service?.name ?? "Serviço"}
           </div>
-          <div className="truncate text-[10px] text-muted-foreground">
-            {location?.name}
+          <div className="truncate text-[10px] leading-tight text-muted-foreground">
+            {location?.name ?? "Sala"}
           </div>
         </div>
       </div>
@@ -480,12 +490,12 @@ function FrontDeskRow({
 
 function labelOf(s: AppointmentStatus) {
   return {
-    booked: "Booked",
-    confirmed: "Confirm",
-    checked_in: "Check in",
-    in_progress: "Start",
-    completed: "Complete",
-    cancelled: "Cancel",
-    no_show: "No-show",
+    booked: "Agendado",
+    confirmed: "Confirmar",
+    checked_in: "Check-in",
+    in_progress: "Iniciar",
+    completed: "Concluir",
+    cancelled: "Cancelar",
+    no_show: "Faltou",
   }[s];
 }
