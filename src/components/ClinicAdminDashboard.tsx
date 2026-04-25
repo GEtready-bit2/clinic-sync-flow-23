@@ -333,8 +333,8 @@ function ServicesPanel() {
 
   return (
     <PanelCard
-      title="Services"
-      description="Service templates drive durations and color-coding across the calendar."
+      title="Serviços"
+      description="Modelos de serviço definem duração e cor no calendário."
       action={
         <Dialog
           open={open}
@@ -345,25 +345,25 @@ function ServicesPanel() {
         >
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2">
-              <Plus className="h-4 w-4" /> New service
+              <Plus className="h-4 w-4" /> Novo serviço
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{form.id ? "Edit service" : "New service"}</DialogTitle>
+              <DialogTitle>{form.id ? "Editar serviço" : "Novo serviço"}</DialogTitle>
               <DialogDescription>
-                Set name, duration, and a color used on the calendar.
+                Defina nome, duração e cor usada no calendário.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-2">
-              <Field label="Name">
+              <Field label="Nome">
                 <Input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="General consultation"
+                  placeholder="Consulta geral"
                 />
               </Field>
-              <Field label="Duration (minutes)">
+              <Field label="Duração (minutos)">
                 <Input
                   type="number"
                   min={5}
@@ -374,7 +374,7 @@ function ServicesPanel() {
                   }
                 />
               </Field>
-              <Field label="Color">
+              <Field label="Cor">
                 <div className="flex flex-wrap gap-2">
                   {SERVICE_COLORS.map((c) => (
                     <button
@@ -385,7 +385,7 @@ function ServicesPanel() {
                         form.color === c ? "border-foreground" : "border-transparent"
                       }`}
                       style={{ background: c }}
-                      aria-label="Select color"
+                      aria-label="Selecionar cor"
                     />
                   ))}
                 </div>
@@ -393,9 +393,9 @@ function ServicesPanel() {
             </div>
             <DialogFooter>
               <Button variant="ghost" onClick={() => setOpen(false)}>
-                Cancel
+                Cancelar
               </Button>
-              <Button onClick={submit}>{form.id ? "Save changes" : "Create service"}</Button>
+              <Button onClick={submit}>{form.id ? "Salvar alterações" : "Criar serviço"}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -431,13 +431,13 @@ function ServicesPanel() {
                   setOpen(true);
                 }}
               >
-                Edit
+                Editar
               </Button>
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={() => clinicAdmin.removeService(s.id)}
-                aria-label="Delete"
+                aria-label="Excluir"
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
@@ -445,7 +445,7 @@ function ServicesPanel() {
           </div>
         ))}
         {services.length === 0 && (
-          <EmptyState message="No services yet. Add one to start scheduling." />
+          <EmptyState message="Nenhum serviço ainda. Adicione um para começar a agendar." />
         )}
       </div>
     </PanelCard>
