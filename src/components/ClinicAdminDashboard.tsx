@@ -560,14 +560,14 @@ function AvailabilityPanel({
   return (
     <div className="space-y-4">
       <PanelCard
-        title="Recurring weekly availability"
-        description="Configure each doctor's working hours per day and room."
+        title="Disponibilidade semanal recorrente"
+        description="Configure os horários de trabalho de cada médico por dia e sala."
       >
         <div className="mb-4 flex items-center gap-3">
-          <Label className="text-sm">Doctor</Label>
+          <Label className="text-sm">Médico</Label>
           <Select value={doctorId} onValueChange={setDoctorId}>
             <SelectTrigger className="w-64">
-              <SelectValue placeholder="Pick a doctor" />
+              <SelectValue placeholder="Selecione um médico" />
             </SelectTrigger>
             <SelectContent>
               {doctors.map((d) => (
@@ -581,7 +581,7 @@ function AvailabilityPanel({
         </div>
 
         {!activeDoctor ? (
-          <EmptyState message="Add a doctor in the Staff tab first." />
+          <EmptyState message="Cadastre um médico na aba Equipe primeiro." />
         ) : (
           <>
             <WeeklyGrid availability={docAvailability} />
@@ -589,18 +589,19 @@ function AvailabilityPanel({
             {docAvailability.length > 0 && (
               <div className="mt-4">
                 <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Active blocks
+                  Blocos ativos
                 </h4>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {docAvailability.map((a) => {
                     const loc = locations.find((l) => l.id === a.location_id);
+                    const wdLabel = ({ mon: "Seg", tue: "Ter", wed: "Qua", thu: "Qui", fri: "Sex", sat: "Sáb", sun: "Dom" } as const)[a.weekday];
                     return (
                       <div
                         key={a.id}
                         className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm"
                       >
                         <span>
-                          <span className="font-medium capitalize">{a.weekday}</span>{" "}
+                          <span className="font-medium">{wdLabel}</span>{" "}
                           · {a.start_time}–{a.end_time}{" "}
                           <span className="text-muted-foreground">@ {loc?.name ?? "—"}</span>
                         </span>
@@ -623,13 +624,13 @@ function AvailabilityPanel({
 
       {activeDoctor && (
         <PanelCard
-          title="Time off & vacation overrides"
-          description="Block out dates that override the recurring weekly schedule."
+          title="Folgas e férias"
+          description="Bloqueie datas que sobrescrevem o horário semanal recorrente."
         >
           <TimeOffForm doctorId={doctorId} />
           <div className="mt-4 space-y-2">
             {docTimeOff.length === 0 && (
-              <EmptyState message="No upcoming time off scheduled." />
+              <EmptyState message="Nenhuma folga programada." />
             )}
             {docTimeOff.map((t) => (
               <div
