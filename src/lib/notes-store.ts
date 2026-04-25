@@ -1,5 +1,4 @@
 // In-memory EHR-light notes store, keyed by appointment_id.
-// Mirrors the appointment_notes table — swap for Supabase later.
 import { useSyncExternalStore } from "react";
 
 export interface AppointmentNote {
@@ -9,17 +8,7 @@ export interface AppointmentNote {
   updated_at: string;
 }
 
-const seed: AppointmentNote[] = [
-  {
-    appointment_id: "a_1",
-    author_id: "u_doc1",
-    body:
-      "Follow-up for chest tightness. BP 128/82. ECG normal sinus rhythm. Continue current beta-blocker; revisit in 6 weeks.",
-    updated_at: new Date().toISOString(),
-  },
-];
-
-let data: AppointmentNote[] = [...seed];
+let data: AppointmentNote[] = [];
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
@@ -51,6 +40,6 @@ export function useNotes(): AppointmentNote[] {
       return () => unsub();
     },
     () => notesStore.all(),
-    () => seed,
+    () => [],
   );
 }
