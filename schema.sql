@@ -1,4 +1,4 @@
--- ============================================================================
+-- =============================================================================
 -- NexusPulse — Clinical Scheduling SaaS
 -- Multi-tenant Postgres schema with strict Row Level Security (RLS).
 --
