@@ -11,13 +11,9 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { AlertTriangle, Calendar, Clock, GripVertical, MapPin, Search, UserCheck } from "lucide-react";
-import {
-  appointmentsStore,
-  useAppointments,
-  type RescheduleConflict,
-} from "@/lib/appointments-store";
-import { usePatients } from "@/lib/patients-store";
-import { locations, profiles, services } from "@/lib/mock-data";
+import { appointmentsStore, useAppointments, type RescheduleConflict } from "@/lib/appointments-store";
+import { usePatients, patientsStore } from "@/lib/patients-store";
+import { clinicAdmin, useLocations, useServices, useStaff } from "@/lib/clinic-admin-store";
 import type { Appointment, AppointmentStatus } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
 import { NewAppointmentDialog } from "./NewAppointmentDialog";
@@ -58,8 +54,15 @@ export function ReceptionistDashboard() {
     at: number;
   } | null>(null);
 
-  const doctors = profiles.filter((p) => p.role === "doctor");
+  const doctors = useStaff().filter((p) => p.role === "doctor");
   const patients = usePatients();
+  const locations = useLocations();
+  const services = useServices();
+
+  useMemo(() => {
+    patientsStore.load();
+    clinicAdmin.loadLocations();
+  }, []);
 
   const dayAppts = useMemo(() => {
     return all
@@ -91,7 +94,7 @@ export function ReceptionistDashboard() {
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
   );
 
-  const handleDragEnd = (e: DragEndEvent) => {
+  const handleDragEnd = async (e: DragEndEvent) => {
     const apptId = String(e.active.id);
     const overId = e.over?.id ? String(e.over.id) : null;
     if (!overId) return;
@@ -101,13 +104,18 @@ export function ReceptionistDashboard() {
     const startsAt = new Date(today);
     startsAt.setHours(h, m, 0, 0);
 
-    const result = appointmentsStore.reschedule(apptId, {
-      doctor_id: doctorId,
-      starts_at: startsAt.toISOString(),
-    });
-    if (result) {
-      setConflict({ info: result, at: Date.now() });
-      window.setTimeout(() => setConflict(null), 4000);
+    try {
+      const result = await appointmentsStore.reschedule(apptId, {
+        doctor_id: doctorId,
+        starts_at: startsAt.toISOString(),
+      });
+      if (result) {
+        setConflict({ info: result, at: Date.now() });
+        window.setTimeout(() => setConflict(null), 4000);
+      }
+    } catch (err) {
+      console.error("Erro ao remarcar appointment:", err);
+      // Poderia mostrar um toast de erro aqui
     }
   };
 
@@ -160,7 +168,7 @@ export function ReceptionistDashboard() {
             <SelectItem value="all">Todos os médicos</SelectItem>
             {doctors.map((d) => (
               <SelectItem key={d.id} value={d.id}>
-                {d.full_name} · {d.specialty}
+                {d.full_name}{d.specialty ? ` · ${d.specialty}` : ""}
               </SelectItem>
             ))}
           </SelectContent>
@@ -212,7 +220,7 @@ export function ReceptionistDashboard() {
                       </div>
                       <div className="leading-tight">
                         <div className="text-xs font-semibold">{doc.full_name}</div>
-                        <div className="text-[10px] text-muted-foreground">{doc.specialty}</div>
+                        <div className="text-[10px] text-muted-foreground">{doc.specialty || ""}</div>
                       </div>
                     </div>
                     <DoctorColumn doctorId={doc.id}>
@@ -269,9 +277,11 @@ export function ReceptionistDashboard() {
 
 function ConflictBanner({ conflict }: { conflict: RescheduleConflict }) {
   const patients = usePatients();
+  const staff = useStaff();
+  const locations = useLocations();
   const other = conflict.with;
   const patient = patients.find((p) => p.id === other.patient_id);
-  const doctor = profiles.find((p) => p.id === other.doctor_id);
+  const doctor = staff.find((p) => p.id === other.doctor_id);
   const room = locations.find((l) => l.id === other.location_id);
   return (
     <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -380,6 +390,8 @@ function ApptBlock({
   onSelect: () => void;
 }) {
   const patients = usePatients();
+  const services = useServices();
+  const locations = useLocations();
   const start = new Date(appt.starts_at);
   const end = new Date(appt.ends_at);
   const startMinutes = (start.getHours() - 8) * 60 + start.getMinutes();
@@ -452,10 +464,13 @@ function FrontDeskRow({
   onSelect: () => void;
   patients: ReturnType<typeof usePatients>;
 }) {
+  const services = useServices();
+  const locations = useLocations();
+  const staff = useStaff();
   const patient = patients.find((p) => p.id === appt.patient_id);
   const service = services.find((s) => s.id === appt.service_id);
   const location = locations.find((l) => l.id === appt.location_id);
-  const doctor = profiles.find((p) => p.id === appt.doctor_id);
+  const doctor = staff.find((p) => p.id === appt.doctor_id);
 
   return (
     <li

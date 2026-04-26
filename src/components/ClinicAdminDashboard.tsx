@@ -51,7 +51,7 @@ import {
   useTimeOff,
   WEEKDAYS,
 } from "@/lib/clinic-admin-store";
-import type { Role, Weekday } from "@/lib/types";
+import type { Role, Weekday, UserRole } from "@/lib/types";
 
 const roleLabel: Record<Role, string> = {
   super_admin: "Super Administrador",
@@ -68,6 +68,10 @@ export function ClinicAdminDashboard() {
   const availability = useAvailability();
   const timeOff = useTimeOff();
   const doctors = staff.filter((s) => s.role === "doctor" && s.active);
+
+  useMemo(() => {
+    clinicAdmin.loadLocations();
+  }, []);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
@@ -152,20 +156,25 @@ function StaffPanel() {
   const [form, setForm] = useState({
     full_name: "",
     email: "",
-    role: "doctor" as Role,
+    role: "doctor" as UserRole["role"],
     specialty: "",
   });
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.full_name.trim() || !form.email.trim()) return;
-    clinicAdmin.inviteStaff({
-      full_name: form.full_name.trim(),
-      email: form.email.trim(),
-      role: form.role,
-      specialty: form.role === "doctor" ? form.specialty.trim() || undefined : undefined,
-    });
-    setForm({ full_name: "", email: "", role: "doctor", specialty: "" });
-    setOpen(false);
+    try {
+      await clinicAdmin.inviteStaff({
+        full_name: form.full_name.trim(),
+        email: form.email.trim(),
+        role: form.role,
+        specialty: form.role === "doctor" ? form.specialty.trim() || undefined : undefined,
+      });
+      setForm({ full_name: "", email: "", role: "doctor", specialty: "" });
+      setOpen(false);
+    } catch (err) {
+      console.error("Erro ao convidar staff:", err);
+      // Poderia mostrar um toast de erro aqui
+    }
   };
 
   return (
@@ -205,7 +214,7 @@ function StaffPanel() {
               <Field label="Papel">
                 <Select
                   value={form.role}
-                  onValueChange={(v) => setForm({ ...form, role: v as Role })}
+                  onValueChange={(v) => setForm({ ...form, role: v as UserRole["role"] })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -319,16 +328,21 @@ function ServicesPanel() {
 
   const reset = () => setForm({ id: undefined, name: "", duration_min: 30, color: SERVICE_COLORS[0] });
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.name.trim() || form.duration_min < 5) return;
-    clinicAdmin.upsertService({
-      id: form.id,
-      name: form.name.trim(),
-      duration_min: form.duration_min,
-      color: form.color,
-    });
-    reset();
-    setOpen(false);
+    try {
+      await clinicAdmin.upsertService({
+        id: form.id,
+        name: form.name.trim(),
+        duration_min: form.duration_min,
+        color: form.color,
+      });
+      reset();
+      setOpen(false);
+    } catch (err) {
+      console.error("Erro ao salvar serviço:", err);
+      // Poderia mostrar um toast de erro aqui
+    }
   };
 
   return (
@@ -426,7 +440,7 @@ function ServicesPanel() {
                     id: s.id,
                     name: s.name,
                     duration_min: s.duration_min,
-                    color: s.color,
+                    color: s.color || SERVICE_COLORS[0],
                   });
                   setOpen(true);
                 }}
@@ -436,7 +450,13 @@ function ServicesPanel() {
               <Button
                 size="icon"
                 variant="ghost"
-                onClick={() => clinicAdmin.removeService(s.id)}
+                onClick={async () => {
+                  try {
+                    await clinicAdmin.removeService(s.id);
+                  } catch (err) {
+                    console.error("Erro ao remover serviço:", err);
+                  }
+                }}
                 aria-label="Excluir"
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -465,11 +485,15 @@ function LocationsPanel() {
     setName("");
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!name.trim()) return;
-    clinicAdmin.upsertLocation({ id: editingId ?? undefined, name: name.trim() });
-    reset();
-    setOpen(false);
+    try {
+      await clinicAdmin.upsertLocation({ id: editingId ?? undefined, name: name.trim() });
+      reset();
+      setOpen(false);
+    } catch (err) {
+      // Handle error (sonner would be good here)
+    }
   };
 
   return (
@@ -645,7 +669,13 @@ function AvailabilityPanel({
                         <Button
                           size="icon"
                           variant="ghost"
-                          onClick={() => clinicAdmin.removeAvailability(a.id)}
+                          onClick={async () => {
+                            try {
+                              await clinicAdmin.removeAvailability(a.id);
+                            } catch (err) {
+                              console.error("Erro ao remover disponibilidade:", err);
+                            }
+                          }}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -759,15 +789,20 @@ function AvailabilityForm({
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("17:00");
 
-  const submit = () => {
+  const submit = async () => {
     if (!locationId || start >= end) return;
-    clinicAdmin.addAvailability({
-      doctor_id: doctorId,
-      location_id: locationId,
-      weekday,
-      start_time: start,
-      end_time: end,
-    });
+    try {
+      await clinicAdmin.addAvailability({
+        doctor_id: doctorId,
+        location_id: locationId,
+        weekday,
+        start_time: `${start.toString().padStart(2, "0")}:00`,
+        end_time: `${end.toString().padStart(2, "0")}:00`,
+      });
+    } catch (err) {
+      console.error("Erro ao adicionar disponibilidade:", err);
+      // Poderia mostrar um toast de erro aqui
+    }
   };
 
   return (

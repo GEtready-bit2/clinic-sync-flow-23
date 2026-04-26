@@ -29,33 +29,52 @@ export interface Profile {
   clinic_id: string | null;
   full_name: string;
   email: string;
-  role: Role;
+  phone?: string;
   avatar_url?: string;
-  specialty?: string;
+  active?: boolean;
+  created_at?: string;
+}
+
+export interface UserRole {
+  id: string;
+  user_id: string;
+  clinic_id: string;
+  role: Role;
 }
 
 export interface Location {
   id: string;
   clinic_id: string;
   name: string;
+  description?: string;
+  active?: boolean;
+  created_at?: string;
 }
 
 export interface Service {
   id: string;
   clinic_id: string;
   name: string;
+  description?: string;
   duration_min: number;
-  color: string;
+  color?: string;
+  active?: boolean;
+  created_at?: string;
 }
 
 export interface Patient {
   id: string;
   clinic_id: string;
+  user_id?: string;
   full_name: string;
-  date_of_birth: string;
-  email: string;
-  phone: string;
+  date_of_birth?: string;
+  sex?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
   allergies?: string;
+  medical_history?: string;
+  created_at?: string;
 }
 
 export interface Appointment {

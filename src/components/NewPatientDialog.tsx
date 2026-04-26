@@ -31,25 +31,29 @@ export function NewPatientDialog({ onSuccess }: { onSuccess?: (id: string) => vo
     setSuccess(false);
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!fullName.trim() || !dateOfBirth) return;
     
-    const newPatient = patientsStore.add({
-      full_name: fullName.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-      date_of_birth: dateOfBirth,
-    });
-    
-    setSuccess(true);
-    if (onSuccess) {
-      onSuccess(newPatient.id);
+    try {
+      const newPatient = await patientsStore.add({
+        full_name: fullName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        date_of_birth: dateOfBirth,
+      });
+      
+      setSuccess(true);
+      if (onSuccess) {
+        onSuccess(newPatient.id);
+      }
+      
+      window.setTimeout(() => {
+        setOpen(false);
+        reset();
+      }, 700);
+    } catch (err) {
+      console.error("Erro ao salvar paciente:", err);
     }
-    
-    window.setTimeout(() => {
-      setOpen(false);
-      reset();
-    }, 700);
   };
 
   return (

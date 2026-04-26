@@ -21,7 +21,8 @@ import {
 import { useAppointments } from "@/lib/appointments-store";
 import { useNotes, notesStore } from "@/lib/notes-store";
 import { auth } from "@/lib/auth-store";
-import { locations, patients, services } from "@/lib/mock-data";
+import { usePatients } from "@/lib/patients-store";
+import { useLocations, useServices } from "@/lib/clinic-admin-store";
 import type { Appointment } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ const HOUR_PX = 56;
 export function DoctorWorkspace() {
   const me = auth.current()!;
   const all = useAppointments();
+  const patients = usePatients();
   const today = useMemo(() => new Date(), []);
   const [selectedDay, setSelectedDay] = useState<Date>(today);
   const [selectedApptId, setSelectedApptId] = useState<string | null>(null);
@@ -344,6 +346,9 @@ function ApptBlock({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const patients = usePatients();
+  const services = useServices();
+  const locations = useLocations();
   const start = new Date(appt.starts_at);
   const end = new Date(appt.ends_at);
   const startMinutes = (start.getHours() - 8) * 60 + start.getMinutes();
@@ -411,6 +416,9 @@ function TodayQueue({
         )}
         {appts.map((a) => {
           const start = new Date(a.starts_at);
+          const patients = usePatients();
+          const services = useServices();
+          const locations = useLocations();
           const patient = patients.find((p) => p.id === a.patient_id);
           const service = services.find((s) => s.id === a.service_id);
           const location = locations.find((l) => l.id === a.location_id);
@@ -461,7 +469,7 @@ function PatientList({
   mine,
   onOpenAppt,
 }: {
-  rows: { patient: (typeof patients)[number]; lastVisit: Date; visits: number }[];
+  rows: { patient: any; lastVisit: Date; visits: number }[];
   mine: Appointment[];
   onOpenAppt: (id: string) => void;
 }) {
@@ -503,7 +511,7 @@ function PatientList({
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
                       {patient.full_name
                         .split(" ")
-                        .map((n) => n[0])
+                        .map((n: string) => n[0])
                         .slice(0, 2)
                         .join("")}
                     </div>
@@ -531,33 +539,58 @@ function PatientList({
                   </div>
                 </button>
                 {isOpen && (
-                  <div className="mt-3 space-y-1 rounded-lg border border-border bg-muted/30 p-2">
-                    {history.map((a) => {
-                      const svc = services.find((s) => s.id === a.service_id);
-                      return (
-                        <button
-                          key={a.id}
-                          onClick={() => onOpenAppt(a.id)}
-                          className="flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-card"
-                        >
-                          <span className="flex items-center gap-2">
-                            <Clock className="h-3 w-3 text-muted-foreground" />
-                            {format(new Date(a.starts_at), "d 'de' MMM, HH:mm", { locale: ptBR })}
-                            <span className="text-muted-foreground">
-                              · {svc?.name}
-                            </span>
-                          </span>
-                          <StatusBadge status={a.status} />
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <PatientHistory
+                    patientId={patient.id}
+                    mine={mine}
+                    onOpenAppt={onOpenAppt}
+                  />
                 )}
               </li>
             );
           })}
         </ul>
       )}
+    </div>
+  );
+}
+
+function PatientHistory({
+  patientId,
+  mine,
+  onOpenAppt,
+}: {
+  patientId: string;
+  mine: Appointment[];
+  onOpenAppt: (id: string) => void;
+}) {
+  const services = useServices();
+  const history = mine
+    .filter((a) => a.patient_id === patientId)
+    .sort(
+      (a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime(),
+    );
+
+  return (
+    <div className="mt-3 space-y-1 rounded-lg border border-border bg-muted/30 p-2">
+      {history.map((a) => {
+        const svc = services.find((s) => s.id === a.service_id);
+        return (
+          <button
+            key={a.id}
+            onClick={() => onOpenAppt(a.id)}
+            className="flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-card"
+          >
+            <span className="flex items-center gap-2">
+              <Clock className="h-3 w-3 text-muted-foreground" />
+              {format(new Date(a.starts_at), "d 'de' MMM, HH:mm", {
+                locale: ptBR,
+              })}
+              <span className="text-muted-foreground">· {svc?.name}</span>
+            </span>
+            <StatusBadge status={a.status} />
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -594,6 +627,8 @@ function NotesEditor({
             </li>
           )}
           {recent.map((a) => {
+            const patients = usePatients();
+            const services = useServices();
             const p = patients.find((x) => x.id === a.patient_id);
             const s = services.find((x) => x.id === a.service_id);
             const isActive = appt?.id === a.id;
@@ -638,6 +673,9 @@ function NotesEditor({
 
 function NoteForm({ appt, authorId }: { appt: Appointment; authorId: string }) {
   const all = useNotes();
+  const patients = usePatients();
+  const services = useServices();
+  const locations = useLocations();
   const existing = all.find((n) => n.appointment_id === appt.id);
   const patient = patients.find((p) => p.id === appt.patient_id);
   const service = services.find((s) => s.id === appt.service_id);

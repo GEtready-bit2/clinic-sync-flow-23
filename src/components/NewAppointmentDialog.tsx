@@ -6,8 +6,10 @@ import {
   useAppointments,
   type RescheduleConflict,
 } from "@/lib/appointments-store";
+import type { Appointment, AppointmentStatus, UserRole } from "@/lib/types";
 import { usePatients } from "@/lib/patients-store";
-import { clinic, locations, profiles, services } from "@/lib/mock-data";
+import { useStaff, useLocations, useServices } from "@/lib/clinic-admin-store";
+import { clinic } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,19 +44,40 @@ const TIME_OPTIONS = (() => {
 
 export function NewAppointmentDialog() {
   const [open, setOpen] = useState(false);
-  const doctors = useMemo(() => profiles.filter((p) => p.role === "doctor"), []);
+  const staff = useStaff();
+  const doctors = useMemo(() => staff.filter((p) => p.role === "doctor"), [staff]);
   const patients = usePatients();
+  const locations = useLocations();
+  const services = useServices();
 
   const [patientId, setPatientId] = useState("");
   useEffect(() => {
     if (patients.length > 0 && !patientId) {
       setPatientId(patients[0].id);
     }
-  }, [patients, patientId]);
+  }, [patients]);
 
-  const [doctorId, setDoctorId] = useState(doctors[0]?.id ?? "");
-  const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
-  const [locationId, setLocationId] = useState(locations[0]?.id ?? "");
+  const [doctorId, setDoctorId] = useState("");
+  useEffect(() => {
+    if (doctors.length > 0 && !doctorId) {
+      setDoctorId(doctors[0].id);
+    }
+  }, [doctors]);
+
+  const [serviceId, setServiceId] = useState("");
+  useEffect(() => {
+    if (services.length > 0 && !serviceId) {
+      setServiceId(services[0].id);
+    }
+  }, [services]);
+
+  const [locationId, setLocationId] = useState("");
+  useEffect(() => {
+    if (locations.length > 0 && !locationId) {
+      setLocationId(locations[0].id);
+    }
+  }, [locations]);
+
   const [time, setTime] = useState("09:00");
   const [date, setDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [notes, setNotes] = useState("");
@@ -115,32 +138,37 @@ export function NewAppointmentDialog() {
     setDate(format(new Date(), "yyyy-MM-dd"));
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!patientId || !doctorId || !serviceId || !locationId || !selectedService) return;
     const [h, m] = time.split(":").map(Number);
     const [yy, mm, dd] = date.split("-").map(Number);
     const starts = new Date(yy, mm - 1, dd, h, m, 0, 0);
-    const result = appointmentsStore.book({
-      clinic_id: clinic.id,
-      patient_id: patientId,
-      doctor_id: doctorId,
-      service_id: serviceId,
-      location_id: locationId,
-      starts_at: starts.toISOString(),
-      duration_min: selectedService.duration_min,
-      notes: notes.trim() || undefined,
-    });
-    if (result) {
-      setConflict(result);
-      setSuccess(false);
-      return;
-    }
+    try {
+      const result = await appointmentsStore.book({
+        clinic_id: clinic.id,
+        patient_id: patientId,
+        doctor_id: doctorId,
+        service_id: serviceId,
+        location_id: locationId,
+        starts_at: starts.toISOString(),
+        duration_min: selectedService.duration_min,
+        notes: notes.trim() || undefined,
+      });
+      if (result) {
+        setConflict(result);
+        setSuccess(false);
+        return;
+      }
     setConflict(null);
-    setSuccess(true);
-    window.setTimeout(() => {
-      setOpen(false);
-      reset();
-    }, 700);
+      setSuccess(true);
+      window.setTimeout(() => {
+        setOpen(false);
+        reset();
+      }, 700);
+    } catch (err) {
+      console.error("Erro ao criar appointment:", err);
+      // Poderia mostrar um toast de erro aqui
+    }
   };
 
   return (
@@ -305,9 +333,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function ConflictNotice({ conflict }: { conflict: RescheduleConflict }) {
   const patients = usePatients();
+  const staff = useStaff();
+  const locations = useLocations();
   const other = conflict.with;
   const patient = patients.find((p) => p.id === other.patient_id);
-  const doctor = profiles.find((p) => p.id === other.doctor_id);
+  const doctor = staff.find((p) => p.id === other.doctor_id);
   const room = locations.find((l) => l.id === other.location_id);
   return (
     <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
